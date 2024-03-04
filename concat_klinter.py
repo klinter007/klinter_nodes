@@ -2,7 +2,7 @@ class concat_klinter:
     """Class for concatenating strings with optional additional string, following klinter guidelines."""
 
     @classmethod
-    def input_types(cls):
+    def INPUT_TYPES(cls):
         """Defines the input types for the concatenation operation."""
         return {
             "required": {
