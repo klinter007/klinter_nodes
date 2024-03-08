@@ -34,7 +34,7 @@ class concat:
 
 
 
-class whitelist:
+class Filter:
     """Class for checking if a given string appears in a list of strings and returning a filter word if true."""
 
     @classmethod
@@ -42,17 +42,17 @@ class whitelist:
         """Defines the input types for the operation."""
         return {
             "required": {
-                "in_question": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
+                "in_question": ("STRING", {"forceInput": True, "default": "", "multiline": False}),
                 "wordlist": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
                 "safeword": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
             }
         }
 
     RETURN_TYPES = ("STRING",)
-    FUNCTION = "whitelist"
+    FUNCTION = "Filter"
     CATEGORY = "klinter"
 
-    def whitelist(self, in_question, wordlist, safeword):
+    def Filter(self, in_question, wordlist, safeword):
         """
         Checks if 'in_question' exists within 'wordlist'. If it does, returns 'safeword',
         otherwise returns 'in_question'.
