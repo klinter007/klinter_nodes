@@ -1,5 +1,7 @@
 import os
 import json
+import numpy as np
+
 
 class concat:
     """Class for concatenating strings with optional additional string, following klinter guidelines."""
@@ -156,3 +158,26 @@ class SingleString:
     def passtring(self, string):
         return (string, )
 
+# based on Mikey Nodes
+class PrintFloats:
+    """Class to convert a float or an array of floats to a string representation, ensuring proper format without extra line breaks."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"audio_float": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1000000.0, "forceInput": True})}}
+
+    RETURN_TYPES = ('STRING', "STRING", )
+    RETURN_NAMES = ('formatted_float', )
+    FUNCTION = 'convert'
+    CATEGORY = "Utils" 
+
+    def convert(self, float_):
+       
+        
+        # Handle both single float and arrays of floats
+        if isinstance(float_, np.ndarray):
+            formatted_float = ', '.join(f"{x:.2f}" for x in float_)
+        else:
+            formatted_float = f"{float_:0.2f}"  # Ensures the float is formatted to two decimal places
+
+        return (formatted_float, )

@@ -4,6 +4,8 @@ from .nodes import Filter
 from .nodes import PresentString
 from .nodes import SizeSelector
 from .nodes import SingleString
+from .nodes import PrintFloats
+
 # Consider adding more imports here as necessary
 
 # Mapping of node identifiers to their respective class implementations
@@ -13,6 +15,7 @@ NODE_CLASS_MAPPINGS = {
     "PresentString": PresentString,
     "SizeSelector": SizeSelector,
     "SingleString": SingleString,
+    "PrintFloats": PrintFloats,
     # You can add more node mappings here
 }
 
@@ -23,6 +26,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PresentString": "Show String (klinter)",
     "SizeSelector": "Size Selector (klinter)",
     "SingleString": "Single String (klinter)",
+    "PrintFloats": "Print Floats (klinter)",
     # Additional display names can be added here
 }
 
