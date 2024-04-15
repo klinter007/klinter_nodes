@@ -166,18 +166,18 @@ class PrintFloats:
     def INPUT_TYPES(cls):
         return {"required": {"audio_float": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1000000.0, "forceInput": True})}}
 
-    RETURN_TYPES = ('STRING', "STRING", )
-    RETURN_NAMES = ('formatted_float', )
-    FUNCTION = 'convert'
-    CATEGORY = "Utils" 
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("formatted_float",)
+    FUNCTION = "convert"
+    CATEGORY = "Utils"  # Simplified category for demonstration
 
     def convert(self, audio_float):
-       
-        
-        # Handle both single float and arrays of floats
-        if isinstance(float_, np.ndarray):
-            formatted_float = ', '.join(f"{x:.2f}" for x in float_)
+        # Ensure the correct handling of both single float and arrays of floats
+        if isinstance(audio_float, np.ndarray):
+            # Process each float in the array and join with a newline
+            formatted_float = '\n'.join(f"{x:.2f}" for x in audio_float)
         else:
-            formatted_float = f"{float_:0.2f}"  # Ensures the float is formatted to two decimal places
+            # Process a single float
+            formatted_float = f"{audio_float:.2f}"
 
-        return (formatted_float, )
+        return (formatted_float,)
