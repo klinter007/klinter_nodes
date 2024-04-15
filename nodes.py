@@ -171,7 +171,7 @@ class PrintFloats:
     FUNCTION = 'convert'
     CATEGORY = "Utils" 
 
-    def convert(self, float_):
+    def convert(self, audio_float):
        
         
         # Handle both single float and arrays of floats
