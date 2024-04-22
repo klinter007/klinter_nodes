@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import ast
 
 
 class concat:
@@ -181,3 +182,38 @@ class PrintFloats:
             formatted_float = f"{audio_float:.2f}"
 
         return (formatted_float,)
+    
+
+
+
+
+
+class ListStringToFloatNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": { "input_data": ("STRING", {"default": "[]"}) },
+        }
+
+    RETURN_TYPES = ("FLOAT",)
+    RETURN_NAMES = ("output_float",)
+    FUNCTION = "process_input"
+    CATEGORY = "Custom"
+
+    def process_input(self, input_data):
+        # Attempt to evaluate the string input as a list
+        try:
+            # Convert string to list if it's not a list
+            if isinstance(input_data, str):
+                input_data = ast.literal_eval(input_data)
+            
+            # Example operation: calculate the sum of elements if it's a list
+            if isinstance(input_data, list):
+                result = sum(input_data)
+            else:
+                result = float(input_data)
+        except:
+            # Handle errors or unexpected input types
+            result = 0.0
+
+        return (result,)

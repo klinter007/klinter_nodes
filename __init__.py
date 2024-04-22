@@ -5,6 +5,7 @@ from .nodes import PresentString
 from .nodes import SizeSelector
 from .nodes import SingleString
 from .nodes import PrintFloats
+from .nodes import ListStringToFloatNode
 
 # Consider adding more imports here as necessary
 
@@ -16,6 +17,8 @@ NODE_CLASS_MAPPINGS = {
     "SizeSelector": SizeSelector,
     "SingleString": SingleString,
     "PrintFloats": PrintFloats,
+    "ListStringToFloatNode": ListStringToFloatNode,
+
     # You can add more node mappings here
 }
 
@@ -27,6 +30,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SizeSelector": "Size Selector (klinter)",
     "SingleString": "Single String (klinter)",
     "PrintFloats": "Print Floats (klinter)",
+    "ListStringToFloatNode": "ListStringToFloatNode (klinter)",
     # Additional display names can be added here
 }
 
