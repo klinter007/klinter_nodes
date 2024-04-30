@@ -1,5 +1,10 @@
 {
   "sizes": {
+    "288x512": {
+      "width": 288,
+      "height": 512,
+      "name": "portrait tiny"
+    },
     "432x768": {
       "width": 432,
       "height": 768,
@@ -24,6 +29,11 @@
       "width": 720,
       "height": 1280,
       "name": "native portrait"
+    },
+    "288x512": {
+      "width": 512,
+      "height": 288,
+      "name": "landscape tiny"
     },
     "768x432": {
       "width": 768,
