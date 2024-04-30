@@ -30,7 +30,7 @@
       "height": 1280,
       "name": "native portrait"
     },
-    "288x512": {
+    "512x288": {
       "width": 512,
       "height": 288,
       "name": "landscape tiny"
