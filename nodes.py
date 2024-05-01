@@ -217,3 +217,24 @@ class ListStringToFloatNode:
             result = 0.0
 
         return (result,)
+        
+class YellowBus:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("MODEL", {}),         # Input is a model
+                "vae": ("VAE", {}),             # Input is a VAE
+                "pos_prompt": ("CONDITIONING", {}),  # Input is a positive prompt (conditioning)
+                "neg_prompt": ("CONDITIONING", {}),  # Input is a negative prompt (conditioning)
+                "latent": ("LATENT", {}),       # Input is latent embeddings
+            }
+        }
+
+    RETURN_TYPES = ("MODEL", "VAE", "CONDITIONING", "CONDITIONING", "LATENT")
+    RETURN_NAMES = ("model_out", "vae_out", "pos_prompt_out", "neg_prompt_out", "latent_out")
+    FUNCTION = "transfer"
+
+    def transfer(self, model, vae, pos_prompt, neg_prompt, latent):
+        # Return inputs directly as outputs
+        return (model, vae, pos_prompt, neg_prompt, latent)
