@@ -232,7 +232,7 @@ class YellowBus:
         }
 
     RETURN_TYPES = ("MODEL", "VAE", "CONDITIONING", "CONDITIONING", "LATENT")
-    RETURN_NAMES = ("model_out", "vae_out", "pos_prompt_out", "neg_prompt_out", "latent_out")
+    RETURN_NAMES = ("model", "vae", "pos_prompt", "neg_prompt", "latent")
     FUNCTION = "transfer"
 
     def transfer(self, model, vae, pos_prompt, neg_prompt, latent):
