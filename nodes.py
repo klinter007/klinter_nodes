@@ -222,12 +222,12 @@ class YellowBus:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "optional": {
-                "model": ("MODEL", {}),         # Input is a model
-                "vae": ("VAE", {}),             # Input is a VAE
-                "pos_prompt": ("CONDITIONING", {}),  # Input is a positive prompt (conditioning)
-                "neg_prompt": ("CONDITIONING", {}),  # Input is a negative prompt (conditioning)
-                "latent": ("LATENT", {}),       # Input is latent embeddings
+            "required": {
+                "model": ("MODEL", {"forceInput": False,}),         # Input is a model
+                "vae": ("VAE", {"forceInput": False,}),             # Input is a VAE
+                "pos_prompt": ("CONDITIONING", {"forceInput": False,}),  # Input is a positive prompt (conditioning)
+                "neg_prompt": ("CONDITIONING",  {"forceInput": False,}),  # Input is a negative prompt (conditioning)
+                "latent": ("LATENT", {"forceInput": False,}),       # Input is latent embeddings
             }
         }
 
