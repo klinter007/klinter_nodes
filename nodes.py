@@ -222,7 +222,7 @@ class YellowBus:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
+            "optional": {
                 "model": ("MODEL", {}),         # Input is a model
                 "vae": ("VAE", {}),             # Input is a VAE
                 "pos_prompt": ("CONDITIONING", {}),  # Input is a positive prompt (conditioning)
