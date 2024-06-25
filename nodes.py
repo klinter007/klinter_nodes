@@ -238,3 +238,31 @@ class YellowBus:
     def transfer(self, model, vae, pos_prompt, neg_prompt, latent):
         # Return inputs directly as outputs
         return (model, vae, pos_prompt, neg_prompt, latent)
+
+
+
+class Florence2Captions2IPA:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "caption_input": ("STRING", {"multiline": True}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "format_prompts"
+    CATEGORY = "text"
+
+    def format_prompts(self, caption_input):
+        if isinstance(caption_input, list):
+            # If it's already a list, join the items
+            formatted = "\n".join(caption_input)
+        elif isinstance(caption_input, str):
+            # If it's a single string, use it as is
+            formatted = caption_input
+        else:
+            # If it's neither a list nor a string, convert to string
+            formatted = str(caption_input)
+
+        return (formatted,) 
