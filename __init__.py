@@ -17,7 +17,7 @@ NODE_CLASS_MAPPINGS = {
     "SizeSelector": SizeSelector,
     "SingleString": SingleString,
     "YellowBus": YellowBus,
-    "Florence2Captions2IPA":PromptFormatter,
+    "Florence2Captions2IPA":Florence2Captions2IPA,
 
     # You can add more node mappings here
 }
@@ -30,7 +30,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SizeSelector": "Size Selector (klinter)",
     "SingleString": "Single String (klinter)",
     "YellowBus": "YellowBus (klinter)",
-    "PromptFormatter":"PromptFormatter (klinter)",
+    "Florence2Captions2IPA":"Florence2Captions2IPA (klinter)",
     # Additional display names can be added here
 }
 
