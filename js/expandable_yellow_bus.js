@@ -7,19 +7,21 @@ app.registerExtension({
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function() {
                 onNodeCreated?.apply(this, arguments);
+                this.connections = 1;
                 this.addWidget("button", "Add Connection", null, () => {
                     this.addNewPair();
                 });
                 this.addWidget("button", "Remove Connection", null, () => {
                     this.removePair();
                 });
-                this.connections = 2;
                 this.updateConnections();
             };
 
             nodeType.prototype.addNewPair = function() {
-                this.connections++;
-                this.updateConnections();
+                if (this.connections < 5) {
+                    this.connections++;
+                    this.updateConnections();
+                }
             };
 
             nodeType.prototype.removePair = function() {
@@ -35,30 +37,50 @@ app.registerExtension({
                     this.removeOutput(this.outputs.length - 1);
                 }
                 while (this.inputs.length < this.connections) {
-                    this.addInput("Plug me", "*");
-                    this.addOutput("Plug me", "*");
+                    const index = this.inputs.length;
+                    this.addInput(`in ${index + 1}`, "*");
+                    this.addOutput("*", "*");
                 }
                 this.size = this.computeSize();
                 app.graph.setDirtyCanvas(true, true);
             };
 
             nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
-                if (connected && type === LiteGraph.INPUT && link_info) {
-                    const otherNode = this.graph._nodes_by_id[link_info.origin_id];
-                    if (otherNode && otherNode.outputs && otherNode.outputs[link_info.origin_slot]) {
-                        const otherSlot = otherNode.outputs[link_info.origin_slot];
-                        this.inputs[index].type = otherSlot.type;
-                        this.outputs[index].type = otherSlot.type;
-                        this.inputs[index].name = otherSlot.type;
-                        this.outputs[index].name = otherSlot.type;
+                if (type === LiteGraph.INPUT) {
+                    if (connected) {
+                        const otherNode = this.graph._nodes_by_id[link_info.origin_id];
+                        if (otherNode && otherNode.outputs && otherNode.outputs[link_info.origin_slot]) {
+                            const otherSlot = otherNode.outputs[link_info.origin_slot];
+                            this.inputs[index].type = otherSlot.type;
+                            this.outputs[index].type = otherSlot.type;
+                            this.inputs[index].name = otherSlot.name || otherSlot.type;
+                            this.outputs[index].name = otherSlot.name || otherSlot.type;
+                        }
+                    } else {
+                        this.inputs[index].type = "*";
+                        this.outputs[index].type = "*";
+                        this.inputs[index].name = `in ${index + 1}`;
+                        this.outputs[index].name = "*";
                     }
-                } else if (!connected || type === LiteGraph.INPUT) {
-                    this.inputs[index].type = "*";
-                    this.outputs[index].type = "*";
-                    this.inputs[index].name = "Plug me";
-                    this.outputs[index].name = "Plug me";
                 }
-                this.setDirtyCanvas(true, true);
+                this.size = this.computeSize();
+                app.graph.setDirtyCanvas(true, true);
+            };
+
+            nodeType.prototype.onSerialize = function(o) {
+                o.connections = this.connections;
+            };
+
+            nodeType.prototype.onConfigure = function(o) {
+                this.connections = o.connections || 1;
+                this.updateConnections();
+            };
+
+            const onCloned = nodeType.prototype.onCloned;
+            nodeType.prototype.onCloned = function(original) {
+                onCloned?.apply(this, arguments);
+                this.connections = original.connections;
+                this.updateConnections();
             };
         }
     },
