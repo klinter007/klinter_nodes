@@ -1,42 +1,32 @@
-import re
+# Hack: string type that is always equal in not equal comparisons
+class AnyType(str):
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+# Our any instance wants to be a wildcard string
+any = AnyType("*")
 
 class YellowBusV2:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {},
             "optional": {
-                "input_1": ("*",),
-                "input_2": ("*",),
-                "input_3": ("*",),
-                "input_4": ("*",),
-                "input_5": ("*",),
-                # Add more as needed
+                f"value_{i}": (any, ) for i in range(1, 11)
             }
         }
 
-    RETURN_TYPES = ("*",) * 5  # Adjust this number to match the number of optional inputs
-    RETURN_NAMES = tuple(f"output_{i+1}" for i in range(5))  # Adjust this number as well
-    FUNCTION = "reroute"
+    RETURN_TYPES = (any,) * 10
+    FUNCTION = "route"
     CATEGORY = "routing"
     NODE_COLOR = "#FFFF00"  # Yellow color
 
-    def reroute(self, **kwargs):
-        def sort_key(item):
-            match = re.search(r'input_(\d+)', item[0])
-            return int(match.group(1)) if match else float('inf')
-
-        sorted_inputs = sorted(kwargs.items(), key=sort_key)
-        outputs = [value for _, value in sorted_inputs if value is not None]
-        
-        # Pad the outputs with None to match RETURN_TYPES length
-        outputs += [None] * (len(self.RETURN_TYPES) - len(outputs))
-        
-        return tuple(outputs)
-
     @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN")
+    def VALIDATE_INPUTS(s, **kwargs):
+        return True
+
+    def route(self, **kwargs):
+        return tuple(kwargs.values())
 
 NODE_CLASS_MAPPINGS = {
     "YellowBusV2": YellowBusV2

@@ -18,7 +18,7 @@ app.registerExtension({
             };
 
             nodeType.prototype.addNewPair = function() {
-                if (this.connections < 5) {
+                if (this.connections < 10) {  // Changed from 5 to 10
                     this.connections++;
                     this.updateConnections();
                 }
