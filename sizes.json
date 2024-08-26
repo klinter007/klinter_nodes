@@ -30,6 +30,11 @@
             "height": 1280,
             "name": "native 9:16"
         },
+		"1144x1672": {
+            "width": 1144,
+            "height": 1672,
+            "name": "large 9:13"
+        },
         "512x288": {
             "width": 512,
             "height": 288,
@@ -55,10 +60,15 @@
             "height": 648,
             "name": "mid large 16:9"
         },
-        "1280x720": {
+		"1280x720": {
             "width": 1280,
             "height": 720,
-            "name": "native 16:9"
+            "name": "large 13:9"
+        },
+		"1672x1144": { 
+            "width": 1152,
+            "height": 648,
+            "name": "mid large 16:9"
         },
         "512x340": {
             "width": 512,
