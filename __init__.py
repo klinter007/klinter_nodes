@@ -1,7 +1,7 @@
 # Import local node class modules
 from .nodes import concat, Filter, PresentString, SizeSelector, SingleString, YellowBus, Florence2Captions2IPA
 from .yellow_bus_v2 import YellowBusV2
-from .textappend import TextAppendNode  # Add this line
+from .zoom_out_composer import ZoomOutComposer
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -13,7 +13,7 @@ NODE_CLASS_MAPPINGS = {
     "YellowBus": YellowBus,
     "Florence2Captions2IPA": Florence2Captions2IPA,
     "YellowBusV2": YellowBusV2,
-    "TextAppendNode": TextAppendNode,  # Add this line
+    "ZoomOutComposer": ZoomOutComposer,
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -25,8 +25,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SingleString": "Single String (klinter)",
     "YellowBus": "YellowBus (klinter)",
     "Florence2Captions2IPA": "Florence2Captions2IPA (klinter)",
-    "YellowBusV2": "Yellow Bus v2 🚌 (klinter)",
-    "TextAppendNode": "Append Text to File (klinter)",  # Add this line
+    "YellowBusV2": "Yellow Bus v2 (klinter)",
+    "ZoomOutComposer": "Zoom Out Composer (klinter)",
 }
 
 # Define what symbols this module exports
