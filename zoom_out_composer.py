@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 from typing import Tuple
 from math import cos, pi
+from tqdm import tqdm
 
 class ZoomOutComposer:
     @classmethod
@@ -28,9 +29,6 @@ class ZoomOutComposer:
 
     def process_frame(self, i: int, images: torch.Tensor, num_frames: int, 
                      num_images: int, zoom: float) -> torch.Tensor:
-        print(f"\nProcessing frame {i}")
-        print(f"Input images tensor shape: {images.shape}")
-        
         # Calculate zoom for current frame
         x = i / (num_frames - 1)
         current_zoom_log = (1 - self.easeInOutSine(x)) * num_images
@@ -41,7 +39,6 @@ class ZoomOutComposer:
         
         # Get current image
         current_image = images[current_idx]
-        print(f"Current image shape: {current_image.shape}")
         
         # Apply zoom through resize and center crop
         if local_zoom != 1.0:
@@ -56,26 +53,20 @@ class ZoomOutComposer:
                 mode='bicubic',
                 align_corners=False
             ).squeeze(0)
-            print(f"After zoom shape: {zoomed.shape}")
             
             # Center crop back to original size
             margin_h = (new_h - h) // 2
             margin_w = (new_w - w) // 2
             zoomed = zoomed[:, margin_h:margin_h + h, margin_w:margin_w + w]
-            print(f"After crop shape: {zoomed.shape}")
             
             return zoomed
         
         return current_image
 
     def apply_zoom(self, images: torch.Tensor, zoom: float, frames_per_transition: int, mode: str) -> Tuple[torch.Tensor]:
-        print(f"\nStarting apply_zoom in {mode} mode")
-        print(f"Input images shape: {images.shape}")
-        
         # Move channels last to first for processing
         if len(images.shape) == 4:  # BHWC -> BCHW
             images = images.permute(0, 3, 1, 2)
-            print(f"After first permute: {images.shape}")
             
         # Always reverse images for zoom out generation
         images = torch.flip(images, [0])
@@ -85,13 +76,14 @@ class ZoomOutComposer:
         num_frames = num_transitions * frames_per_transition
         num_images = len(images) - 1
         
-        print(f"Will generate {num_frames} frames")
-        
         # Generate frames (always as zoom out)
         frames = []
-        for i in range(num_frames):
-            frame = self.process_frame(i, images, num_frames, num_images, zoom)
-            frames.append(frame)
+        with tqdm(total=num_frames, desc="Generating zoom frames", unit="frame", 
+                 bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} frames') as pbar:
+            for i in range(num_frames):
+                frame = self.process_frame(i, images, num_frames, num_images, zoom)
+                frames.append(frame)
+                pbar.update(1)
             
         # Stack frames
         output = torch.stack(frames, dim=0)
@@ -108,7 +100,6 @@ class ZoomOutComposer:
         
         # Convert to BHWC format
         output = output.permute(0, 2, 3, 1)
-        print(f"Final output shape: {output.shape}")
         
         return (output,)
 
