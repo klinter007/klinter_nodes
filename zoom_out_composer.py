@@ -1,16 +1,20 @@
+# Inspired by https://github.com/mwydmuch/ZoomVideoComposer
+# A node that creates a zoom-out effect transitioning between multiple images
+
 import torch
 import torch.nn.functional as F
 from typing import Tuple
 from math import cos, pi
 
-class CustomZoomComposerNode:
+class ZoomOutComposer:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "images": ("IMAGE",),
-                "zoom": ("FLOAT", {"default": 2.0, "min": 0.1, "max": 10.0, "step": 0.1}),
+                "zoom": ("FLOAT", {"default": 1.5, "min": 1.1, "max": 3.0, "step": 0.05}),
                 "frames_per_transition": ("INT", {"default": 24, "min": 1, "max": 120, "step": 1}),
+                "mode": (["zoom-out", "zoom-in", "zoom-out-in", "zoom-in-out"], {"default": "zoom-out"}),
             }
         }
 
@@ -64,8 +68,8 @@ class CustomZoomComposerNode:
         
         return current_image
 
-    def apply_zoom(self, images: torch.Tensor, zoom: float, frames_per_transition: int) -> Tuple[torch.Tensor]:
-        print(f"\nStarting apply_zoom")
+    def apply_zoom(self, images: torch.Tensor, zoom: float, frames_per_transition: int, mode: str) -> Tuple[torch.Tensor]:
+        print(f"\nStarting apply_zoom in {mode} mode")
         print(f"Input images shape: {images.shape}")
         
         # Move channels last to first for processing
@@ -73,8 +77,9 @@ class CustomZoomComposerNode:
             images = images.permute(0, 3, 1, 2)
             print(f"After first permute: {images.shape}")
             
-        # Always zoom out - reverse images
-        images = torch.flip(images, [0])
+        # For zoom-in, don't reverse the images
+        if mode in ["zoom-out", "zoom-out-in"]:
+            images = torch.flip(images, [0])
             
         # Calculate total frames based on transitions needed
         num_transitions = len(images) - 1
@@ -91,7 +96,18 @@ class CustomZoomComposerNode:
             
         # Stack frames
         output = torch.stack(frames, dim=0)
-        print(f"After stacking shape: {output.shape}")
+        
+        # Handle different modes
+        if mode == "zoom-in":
+            # Reverse the frames for zoom-in
+            output = torch.flip(output, [0])
+        elif mode in ["zoom-out-in", "zoom-in-out"]:
+            # Duplicate and reverse
+            reverse_output = torch.flip(output, [0])
+            if mode == "zoom-out-in":
+                output = torch.cat([output, reverse_output], dim=0)
+            else:  # zoom-in-out
+                output = torch.cat([reverse_output, output], dim=0)
         
         # Convert to BHWC format
         output = output.permute(0, 2, 3, 1)
@@ -99,11 +115,5 @@ class CustomZoomComposerNode:
         
         return (output,)
 
-# Node registration
-NODE_CLASS_MAPPINGS = {
-    "CustomZoomComposerNode": CustomZoomComposerNode
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "CustomZoomComposerNode": "Custom Zoom Composer"
-}
+# Export the class
+__all__ = ['ZoomOutComposer']
