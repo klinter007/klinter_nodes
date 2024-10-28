@@ -77,9 +77,8 @@ class ZoomOutComposer:
             images = images.permute(0, 3, 1, 2)
             print(f"After first permute: {images.shape}")
             
-        # For zoom-in, don't reverse the images
-        if mode in ["zoom-out", "zoom-out-in"]:
-            images = torch.flip(images, [0])
+        # Always reverse images for zoom out generation
+        images = torch.flip(images, [0])
             
         # Calculate total frames based on transitions needed
         num_transitions = len(images) - 1
@@ -88,7 +87,7 @@ class ZoomOutComposer:
         
         print(f"Will generate {num_frames} frames")
         
-        # Generate frames
+        # Generate frames (always as zoom out)
         frames = []
         for i in range(num_frames):
             frame = self.process_frame(i, images, num_frames, num_images, zoom)
@@ -97,17 +96,15 @@ class ZoomOutComposer:
         # Stack frames
         output = torch.stack(frames, dim=0)
         
-        # Handle different modes
+        # Now handle the different modes by manipulating the complete sequence
         if mode == "zoom-in":
-            # Reverse the frames for zoom-in
             output = torch.flip(output, [0])
-        elif mode in ["zoom-out-in", "zoom-in-out"]:
-            # Duplicate and reverse
+        elif mode == "zoom-out-in":
             reverse_output = torch.flip(output, [0])
-            if mode == "zoom-out-in":
-                output = torch.cat([output, reverse_output], dim=0)
-            else:  # zoom-in-out
-                output = torch.cat([reverse_output, output], dim=0)
+            output = torch.cat([output, reverse_output], dim=0)
+        elif mode == "zoom-in-out":
+            reverse_output = torch.flip(output, [0])
+            output = torch.cat([reverse_output, output], dim=0)
         
         # Convert to BHWC format
         output = output.permute(0, 2, 3, 1)
