@@ -37,6 +37,27 @@ app.registerExtension({
                 }, 100);
             }
 
+            // Force a node refresh
+            function refreshNode(node) {
+                // Trigger multiple refresh methods
+                if (node.graph) {
+                    node.graph.change();  // Notify graph of changes
+                }
+                node.setDirtyCanvas(true, true);  // Mark canvas as dirty
+                
+                // Force size recalculation
+                if (typeof node.computeSize === "function") {
+                    const size = node.computeSize();
+                    node.size = size;
+                    node.onResize?.(size);
+                }
+
+                // Schedule another refresh
+                setTimeout(() => {
+                    node.setDirtyCanvas(true, true);
+                }, 10);
+            }
+
             // Handle dynamic type adaptation and refresh display
             nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
                 // Only handle input connections
@@ -47,7 +68,7 @@ app.registerExtension({
                     if (this.inputs?.[index]) {
                         this.inputs[index].type = "empty";
                     }
-                    this.setDirtyCanvas(true, true);
+                    refreshNode(this);
                     return;
                 }
                 
@@ -62,7 +83,7 @@ app.registerExtension({
                 }
 
                 // Force refresh display
-                this.setDirtyCanvas(true, true);
+                refreshNode(this);
             }
         }
     }
