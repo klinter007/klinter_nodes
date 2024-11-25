@@ -50,58 +50,52 @@ class ZoomOutComposer:
             zoomed = F.interpolate(
                 current_image.unsqueeze(0),
                 size=(new_h, new_w),
-                mode='bicubic',
+                mode='bilinear',
                 align_corners=False
-            ).squeeze(0)
+            )[0]
             
-            # Center crop back to original size
-            margin_h = (new_h - h) // 2
-            margin_w = (new_w - w) // 2
-            zoomed = zoomed[:, margin_h:margin_h + h, margin_w:margin_w + w]
-            
+            # Center crop
+            start_h = (new_h - h) // 2
+            start_w = (new_w - w) // 2
+            zoomed = zoomed[
+                :,
+                start_h:start_h + h,
+                start_w:start_w + w
+            ]
             return zoomed
-        
-        return current_image
+        else:
+            return current_image
 
-    def apply_zoom(self, images: torch.Tensor, zoom: float, frames_per_transition: int, mode: str) -> Tuple[torch.Tensor]:
-        # Move channels last to first for processing
-        if len(images.shape) == 4:  # BHWC -> BCHW
-            images = images.permute(0, 3, 1, 2)
-            
-        # Always reverse images for zoom out generation
-        images = torch.flip(images, [0])
-            
-        # Calculate total frames based on transitions needed
-        num_transitions = len(images) - 1
-        num_frames = num_transitions * frames_per_transition
-        num_images = len(images) - 1
-        
-        # Generate frames (always as zoom out)
+    def apply_zoom(self, images: torch.Tensor, zoom: float = 1.5, 
+                  frames_per_transition: int = 24, mode: str = "zoom-out") -> tuple[torch.Tensor]:
+        """Apply zoom effect to a sequence of images."""
+        num_images = images.shape[0] - 1
+        num_frames = frames_per_transition * num_images
+
         frames = []
-        with tqdm(total=num_frames, desc="Generating zoom frames", unit="frame", 
-                 bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} frames') as pbar:
-            for i in range(num_frames):
-                frame = self.process_frame(i, images, num_frames, num_images, zoom)
-                frames.append(frame)
-                pbar.update(1)
-            
-        # Stack frames
-        output = torch.stack(frames, dim=0)
+        for i in tqdm(range(num_frames), desc=f"Generating {mode} frames"):
+            frame = self.process_frame(i, images, num_frames, num_images, zoom)
+            frames.append(frame)
+
+        frames = torch.stack(frames)
         
-        # Now handle the different modes by manipulating the complete sequence
         if mode == "zoom-in":
-            output = torch.flip(output, [0])
+            frames = torch.flip(frames, [0])
         elif mode == "zoom-out-in":
-            reverse_output = torch.flip(output, [0])
-            output = torch.cat([output, reverse_output], dim=0)
+            frames = torch.cat([frames, torch.flip(frames, [0])])
         elif mode == "zoom-in-out":
-            reverse_output = torch.flip(output, [0])
-            output = torch.cat([reverse_output, output], dim=0)
-        
-        # Convert to BHWC format
-        output = output.permute(0, 2, 3, 1)
-        
-        return (output,)
+            frames = torch.cat([torch.flip(frames, [0]), frames])
+            
+        return (frames,)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "ZoomOutComposer": ZoomOutComposer
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ZoomOutComposer": "Zoom Out Composer - klinter"
+}
 
 # Export the class
 __all__ = ['ZoomOutComposer']

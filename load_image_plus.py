@@ -50,12 +50,25 @@ class LoadImagePlusKlinter:
         image = np.array(image).astype(np.float32) / 255.0
         image = torch.from_numpy(image)[None,]
         
-        # Extract alpha channel as mask if present, otherwise create empty mask
-        if 'A' in i.getbands():
-            mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-            mask = 1. - torch.from_numpy(mask)
-        else:
-            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-            
+        # Get filename without extension
         filename = os.path.splitext(os.path.basename(image_path))[0]
+        
+        # Extract alpha channel if present, otherwise create zero mask
+        if i.mode == "RGBA":
+            mask = torch.from_numpy(np.array(i.split()[-1]).astype(np.float32))[None,] / 255.0
+        else:
+            mask = torch.zeros((1, image.shape[1], image.shape[2]), dtype=torch.float32)
+        
         return (image, mask, filename)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "LoadImagePlus": LoadImagePlusKlinter
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoadImagePlus": "Load Image Plus - klinter"
+}
+
+# Export the class
+__all__ = ['LoadImagePlusKlinter']

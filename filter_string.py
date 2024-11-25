@@ -42,3 +42,15 @@ class FilterString:
         except Exception as e:
             print(f"Error in filter_string: {str(e)}")
             return (in_question,)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "filter": FilterString
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "filter": "Filter String - klinter"
+}
+
+# Export the class
+__all__ = ['FilterString']

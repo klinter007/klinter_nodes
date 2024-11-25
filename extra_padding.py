@@ -49,24 +49,30 @@ class ExtraPadding:
         if mask_feather > 0 and mask_feather * 2 < H and mask_feather * 2 < W:
             mask = torch.ones((B, new_height, new_width), dtype=torch.float32)
             t = torch.zeros_like(mask)
+            t[:, pad_y:pad_y+H, pad_x:pad_x+W] = 1.0
             
-            for i in range(H):
-                for j in range(W):
-                    dt = i if pad_y != 0 else H
-                    db = H - i if pad_y + H != new_height else H
-                    dl = j if pad_x != 0 else W
-                    dr = W - j if pad_x + W != new_width else W
-                    d = min(dt, db, dl, dr)
-                    
-                    if d >= mask_feather:
-                        continue
-                    
-                    v = (mask_feather - d) / mask_feather
-                    t[:, pad_y + i, pad_x + j] = v * v
-            
-            mask[:, pad_y:pad_y+H, pad_x:pad_x+W] = t[:, pad_y:pad_y+H, pad_x:pad_x+W]
+            if mask_feather > 0:
+                # Blur the mask
+                t = t.unsqueeze(1)
+                t = F.pad(t, (mask_feather, mask_feather, mask_feather, mask_feather), mode='reflect')
+                t = F.gaussian_blur(t, kernel_size=mask_feather*2+1, sigma=mask_feather/2)
+                t = t.squeeze(1)
+                
+            mask = t
         else:
             mask = torch.ones((B, new_height, new_width), dtype=torch.float32)
-            mask[:, pad_y:pad_y+H, pad_x:pad_x+W] = 0
-
+            mask[:, pad_y:pad_y+H, pad_x:pad_x+W] = 1.0
+        
         return (padded_image, mask)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "ExtraPadding": ExtraPadding
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ExtraPadding": "Extra Padding - klinter"
+}
+
+# Export the class
+__all__ = ['ExtraPadding']

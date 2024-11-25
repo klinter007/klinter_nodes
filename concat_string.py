@@ -36,3 +36,15 @@ class ConcatString:
         # Filter out empty strings and join with spaces
         strings = [s for s in (string_a, string_b, string_c) if s]
         return (" ".join(strings),)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "concat": ConcatString
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "concat": "Concat String - klinter"
+}
+
+# Export the class
+__all__ = ['ConcatString']

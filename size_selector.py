@@ -36,3 +36,15 @@ class SizeSelector:
         height = int(selected_info["height"])
         name = selected_info["name"]
         return (width, height, name)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "SizeSelector": SizeSelector
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "SizeSelector": "Size Selector - klinter"
+}
+
+# Export the class
+__all__ = ['SizeSelector']

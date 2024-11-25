@@ -48,3 +48,15 @@ class PrintFloats:
         except Exception as e:
             print(f"Error in float conversion: {str(e)}")
             return ("0.00",)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "PrintFloats": PrintFloats
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "PrintFloats": "Print Floats - klinter"
+}
+
+# Export the class
+__all__ = ['PrintFloats']

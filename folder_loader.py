@@ -49,8 +49,16 @@ class FolderLoader:
             img_tensor = torch.from_numpy(np.array(img).astype(np.float32) / 255.0)
             images.append(img_tensor)
 
-        output = torch.stack(images, dim=0)
-        return (output,)
+        return (torch.stack(images),)
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "FolderLoader": FolderLoader
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "FolderLoader": "Folder Loader - klinter"
+}
 
 # Export the class
 __all__ = ['FolderLoader']
