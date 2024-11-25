@@ -36,16 +36,36 @@ app.registerExtension({
                 }, 100);
             }
 
-            // Handle dynamic type adaptation
+            // Handle dynamic type adaptation with proper checks
             nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
-                if (type === LiteGraph.INPUT && connected) {
-                    const otherNode = this.graph._nodes_by_id[link_info.origin_id];
-                    if (otherNode && otherNode.outputs && otherNode.outputs[link_info.origin_slot]) {
-                        const otherType = otherNode.outputs[link_info.origin_slot].type;
-                        // Update both input and corresponding output to match connected type
-                        this.inputs[index].type = otherType;
-                        this.outputs[index].type = otherType;
+                // Only handle input connections
+                if (type !== LiteGraph.INPUT) return;
+                
+                // Handle disconnection
+                if (!connected) {
+                    if (this.inputs && this.inputs[index]) {
+                        this.inputs[index].type = "*";
                     }
+                    if (this.outputs && this.outputs[index]) {
+                        this.outputs[index].type = "*";
+                    }
+                    return;
+                }
+                
+                // Handle connection with proper checks
+                if (!link_info) return;
+                const otherNode = this.graph?._nodes_by_id?.[link_info.origin_id];
+                if (!otherNode?.outputs?.[link_info.origin_slot]) return;
+                
+                const otherType = otherNode.outputs[link_info.origin_slot].type;
+                if (!otherType) return;
+
+                // Update both input and corresponding output to match connected type
+                if (this.inputs?.[index]) {
+                    this.inputs[index].type = otherType;
+                }
+                if (this.outputs?.[index]) {
+                    this.outputs[index].type = otherType;
                 }
             }
         }
