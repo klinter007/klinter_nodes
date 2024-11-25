@@ -39,7 +39,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # Image processing nodes
     "ZoomOutComposer": "Zoom Out Composer - klinter",
     "FolderLoader": "Folder Loader - klinter",
-    "ExtraPadding": "Extra Padding - klinter",
+    "ExtraPadding": "Extra Padding for Zoom Out - klinter",
     "SizeSelector": "Size Selector - klinter",
     "LoadImagePlus": "Load Image Plus - klinter",
 }

@@ -31,8 +31,7 @@ class YellowBusV2:
     RETURN_TYPES = tuple([any] * 10)  # Support up to 10 outputs
     RETURN_NAMES = tuple([f"out_{i+1}" for i in range(10)])  # Named outputs for clarity
     FUNCTION = "route"
-    # List multiple categories to make the node appear in both
-    CATEGORY = ["routing", "utils", "klinter"]
+    CATEGORY = "klinter"
     NODE_COLOR = "#FFFF00"  # Yellow color
 
     @classmethod
