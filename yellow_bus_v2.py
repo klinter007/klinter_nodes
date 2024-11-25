@@ -1,18 +1,7 @@
 """Dynamic routing node that can handle multiple input/output pairs with adaptive types."""
 
-# Hack: string type that is always equal in not equal comparisons
-class AnyType:
-    def __init__(self, wildcard="*"):
-        self.wildcard = wildcard
-    
-    def __eq__(self, __value: object) -> bool:
-        return True
-    
-    def __ne__(self, __value: object) -> bool:
-        return False
-
 # Our any instance wants to be a wildcard string
-any = AnyType("*")
+any = "*"  
 
 class YellowBusV2:
     """A dynamic routing node that can handle multiple input/output pairs.
