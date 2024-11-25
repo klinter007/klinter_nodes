@@ -56,11 +56,11 @@ class YellowBusV2:
         return tuple(values)
 
 NODE_CLASS_MAPPINGS = {
-    "YellowBusV2": YellowBusV2
+    "YellowBus": YellowBusV2  # Match the name in __init__.py
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "YellowBusV2": "Yellow Bus v2 🚌"
+    "YellowBus": "Yellow Bus v2 🚌"  # Match the name in __init__.py
 }
 
 # Export the class
