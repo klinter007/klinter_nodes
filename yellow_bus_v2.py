@@ -1,8 +1,5 @@
 """Dynamic routing node that can handle multiple input/output pairs with adaptive types."""
 
-# Define all possible types we might encounter
-POSSIBLE_TYPES = ["IMAGE", "LATENT", "MODEL", "CLIP", "VAE", "CONDITIONING", "MASK", "STRING", "INT", "FLOAT"]
-
 class YellowBusV2:
     """A dynamic routing node that can handle multiple input/output pairs.
     The number of pairs is controlled by the inputcount widget.
@@ -17,13 +14,13 @@ class YellowBusV2:
                 "inputcount": ("INT", {"default": 2, "min": 1, "max": 10, "step": 1}),
             },
             "optional": {
-                # Support any type for each input
-                f"value_{i}": tuple(POSSIBLE_TYPES) for i in range(1, 11)
+                # Each input accepts any type, just like a reroute node
+                f"value_{i}": ("*",) for i in range(1, 11)
             }
         }
     
-    # Support any type for each output
-    RETURN_TYPES = tuple(POSSIBLE_TYPES)
+    # Each output can be any type, matching its input
+    RETURN_TYPES = ("*",) * 10  # 10 outputs, each accepting any type
     RETURN_NAMES = tuple([f"out_{i+1}" for i in range(10)])  # Named outputs for clarity
     FUNCTION = "route"
     CATEGORY = "klinter"
