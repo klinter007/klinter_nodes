@@ -1,19 +1,23 @@
 """Dynamic routing node that can handle multiple input/output pairs with adaptive types."""
 
 # Hack: string type that is always equal in not equal comparisons
-class AnyType(str):
-    def __ne__(self, __value: object) -> bool:
-        return False
+class AnyType:
+    def __init__(self, wildcard="*"):
+        self.wildcard = wildcard
     
     def __eq__(self, __value: object) -> bool:
         return True
+    
+    def __ne__(self, __value: object) -> bool:
+        return False
 
 # Our any instance wants to be a wildcard string
 any = AnyType("*")
 
 class YellowBusV2:
-    """A dynamic routing node that can have multiple input/output pairs.
-    Each pair automatically adapts its type to match the connected input node.
+    """A dynamic routing node that can handle multiple input/output pairs.
+    The number of pairs is controlled by the inputcount widget.
+    Each input is routed to its corresponding output with the same type.
     """
     
     @classmethod
@@ -33,12 +37,12 @@ class YellowBusV2:
     FUNCTION = "route"
     CATEGORY = "klinter"
     NODE_COLOR = "#FFFF00"  # Yellow color
-
+    
     @classmethod
     def VALIDATE_INPUTS(s, **kwargs):
         """All inputs are valid since we handle dynamic types."""
         return True
-
+    
     def route(self, inputcount, **kwargs):
         """Route inputs to outputs in order.
         Each input maps to its corresponding output with the same type.
@@ -59,7 +63,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "YellowBus": "Yellow Bus v2 🚌"  # Match the name in __init__.py
+    "YellowBus": "Yellow Bus v2 🚌 - klinter"  # Match the name in __init__.py
 }
 
 # Export the class
