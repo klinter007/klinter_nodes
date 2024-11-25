@@ -20,7 +20,7 @@ class FilterString:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "filter_string"
-    CATEGORY = ["string", "klinter"]
+    CATEGORY = "klinter"
 
     def filter_string(self, in_question: str, wordlist: str, safeword: str) -> tuple[str]:
         """Check if a string exists in a wordlist and return either the safeword or original string.

@@ -20,7 +20,7 @@ class ConcatString:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "concat"
-    CATEGORY = ["string", "klinter"]
+    CATEGORY = "klinter"
 
     def concat(self, string_a: str, string_b: str, string_c: str = "") -> tuple[str]:
         """Efficiently concatenates up to three strings.

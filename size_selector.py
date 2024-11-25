@@ -17,7 +17,7 @@ class SizeSelector:
     RETURN_TYPES = ("INT", "INT", "STRING")
     RETURN_NAMES = ("width", "height", "name")
     FUNCTION = "return_res"
-    CATEGORY = ["image", "utils", "klinter"]
+    CATEGORY = "klinter"
     OUTPUT_NODE = True
 
     @classmethod

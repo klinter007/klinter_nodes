@@ -19,7 +19,7 @@ class FolderLoader:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
     FUNCTION = "load_images"
-    CATEGORY = ["image", "klinter"]
+    CATEGORY = "klinter"
     NODE_COLOR = "#4169E1"  # Royal Blue
     def load_images(self, folder_path: str, image_load_cap: int = 0, start_index: int = 0) -> tuple[torch.Tensor, ...]:
         if not os.path.isdir(folder_path):

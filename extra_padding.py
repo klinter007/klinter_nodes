@@ -31,7 +31,7 @@ class ExtraPadding:
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("padded_image", "mask")
     FUNCTION = "expand_image"
-    CATEGORY = ["image", "klinter"]
+    CATEGORY = "klinter"
     NODE_COLOR = "#32CD32"  # Lime Green
 
     def expand_image(self, image, zoom_factor, mask_feather, upscale_method):
