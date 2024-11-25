@@ -3,14 +3,12 @@
 # Import node classes from individual files
 from .concat_string import ConcatString
 from .filter_string import FilterString
-from .yellow_bus_v2 import YellowBusV2
+from .yellow_bus import YellowBus
 from .zoom_out_composer import ZoomOutComposer
 from .folder_loader import FolderLoader
 from .extra_padding import ExtraPadding
 from .size_selector import SizeSelector
 from .load_image_plus import LoadImagePlusKlinter
-from .yellow_bus_v1_9 import YellowBusV1_9
-from .yellow_bus_v2_5 import YellowBusV2_5
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -19,9 +17,7 @@ NODE_CLASS_MAPPINGS = {
     "filter": FilterString,
     
     # Core nodes
-    "YellowBus": YellowBusV2,
-    "YellowBusV1_9": YellowBusV1_9,
-    "YellowBusV2_5": YellowBusV2_5,
+    "YellowBus": YellowBus,
     
     # Image processing nodes
     "ZoomOutComposer": ZoomOutComposer,
@@ -38,9 +34,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "filter": "Filter String - klinter",
     
     # Core nodes
-    "YellowBus": "Yellow Bus v2 🚌 - klinter",
-    "YellowBusV1_9": "Yellow Bus v1.9 - klinter",
-    "YellowBusV2_5": "Yellow Bus v2.5 - klinter",
+    "YellowBus": "Yellow Bus - klinter",
     
     # Image processing nodes
     "ZoomOutComposer": "Zoom Out Composer - klinter",

@@ -1,72 +1,89 @@
 import { app } from "../../../scripts/app.js";
 
 app.registerExtension({
-    name: "YellowBusV2",
+    name: "YellowBus",
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
         if (nodeData.name === "YellowBus") {
+            // Initialize node with update button
             nodeType.prototype.onNodeCreated = function() {
-                this.addWidget("button", "Update inputs", null, () => {
+                this.addWidget("button", "Update Pairs", null, () => {
                     if (!this.inputs) {
                         this.inputs = [];
                     }
-                    const target_number_of_inputs = this.widgets.find(w => w.name === "inputcount")["value"];
-                    if(target_number_of_inputs === this.inputs.length) return; // already set, do nothing
+                    const target_pairs = this.widgets.find(w => w.name === "pairs")["value"];
+                    if(target_pairs === this.inputs.length) return; // already set, do nothing
 
-                    if(target_number_of_inputs < this.inputs.length) {
+                    if(target_pairs < this.inputs.length) {
                         // Remove excess inputs and outputs
-                        for(let i = this.inputs.length-1; i >= target_number_of_inputs; i--) {
+                        for(let i = this.inputs.length-1; i >= target_pairs; i--) {
                             this.removeInput(i);
                             this.removeOutput(i);
                         }
                     } else {
                         // Add new inputs and outputs
-                        for(let i = this.inputs.length; i < target_number_of_inputs; i++) {
-                            this.addInput(`value_${i+1}`, "*");  // Wildcard type
-                            this.addOutput(`out_${i+1}`, "*");   // Wildcard type
+                        for(let i = this.inputs.length; i < target_pairs; i++) {
+                            this.addInput(`input_${i+1}`, "empty");
+                            this.addOutput(`out_${i+1}`, "*");
                         }
                     }
                 });
 
                 // Call update once on creation
                 setTimeout(() => {
-                    const widget = this.widgets.find(w => w.name === "Update inputs");
+                    const widget = this.widgets.find(w => w.name === "Update Pairs");
                     if (widget) {
                         widget.callback();
                     }
                 }, 100);
             }
 
-            // Handle dynamic type adaptation with proper checks
+            // Force a node refresh
+            function refreshNode(node) {
+                // Trigger multiple refresh methods
+                if (node.graph) {
+                    node.graph.change();  // Notify graph of changes
+                }
+                node.setDirtyCanvas(true, true);  // Mark canvas as dirty
+                
+                // Force size recalculation
+                if (typeof node.computeSize === "function") {
+                    const size = node.computeSize();
+                    node.size = size;
+                    node.onResize?.(size);
+                }
+
+                // Schedule another refresh
+                setTimeout(() => {
+                    node.setDirtyCanvas(true, true);
+                }, 10);
+            }
+
+            // Handle dynamic type adaptation and refresh display
             nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
                 // Only handle input connections
                 if (type !== LiteGraph.INPUT) return;
                 
                 // Handle disconnection
-                if (!connected) {
-                    if (this.inputs && this.inputs[index]) {
-                        this.inputs[index].type = "*";
+                if (!connected || !link_info) {
+                    if (this.inputs?.[index]) {
+                        this.inputs[index].type = "empty";
                     }
-                    if (this.outputs && this.outputs[index]) {
-                        this.outputs[index].type = "*";
-                    }
+                    refreshNode(this);
                     return;
                 }
                 
                 // Handle connection with proper checks
-                if (!link_info) return;
                 const otherNode = this.graph?._nodes_by_id?.[link_info.origin_id];
-                if (!otherNode?.outputs?.[link_info.origin_slot]) return;
+                const otherOutput = otherNode?.outputs?.[link_info.origin_slot];
+                if (!otherOutput?.type) return;
                 
-                const otherType = otherNode.outputs[link_info.origin_slot].type;
-                if (!otherType) return;
-
-                // Update both input and corresponding output to match connected type
+                // Update input to match connected type
                 if (this.inputs?.[index]) {
-                    this.inputs[index].type = otherType;
+                    this.inputs[index].type = otherOutput.type;
                 }
-                if (this.outputs?.[index]) {
-                    this.outputs[index].type = otherType;
-                }
+
+                // Force refresh display
+                refreshNode(this);
             }
         }
     }
