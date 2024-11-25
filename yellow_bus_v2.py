@@ -14,12 +14,11 @@ class YellowBusV2:
                 "inputcount": ("INT", {"default": 2, "min": 1, "max": 10, "step": 1}),
             },
             "optional": {
-                # Each input accepts any type, just like a reroute node
+                # Each input accepts any type
                 f"value_{i}": ("*",) for i in range(1, 11)
             }
         }
     
-    # Each output can be any type, matching its input
     RETURN_TYPES = ("*",) * 10  # 10 outputs, each accepting any type
     RETURN_NAMES = tuple([f"out_{i+1}" for i in range(10)])  # Named outputs for clarity
     FUNCTION = "route"
