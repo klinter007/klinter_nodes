@@ -37,7 +37,7 @@ app.registerExtension({
                 }, 100);
             }
 
-            // Handle dynamic type adaptation
+            // Handle dynamic type adaptation and refresh display
             nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
                 // Only handle input connections
                 if (type !== LiteGraph.INPUT) return;
@@ -47,6 +47,7 @@ app.registerExtension({
                     if (this.inputs?.[index]) {
                         this.inputs[index].type = "empty";
                     }
+                    this.setDirtyCanvas(true, true);
                     return;
                 }
                 
@@ -59,6 +60,9 @@ app.registerExtension({
                 if (this.inputs?.[index]) {
                     this.inputs[index].type = otherOutput.type;
                 }
+
+                // Force refresh display
+                this.setDirtyCanvas(true, true);
             }
         }
     }
