@@ -20,7 +20,9 @@ class YellowBusV2:
     def INPUT_TYPES(cls):
         """Define dynamic inputs. The actual number of inputs is controlled by the UI."""
         return {
-            "required": {},
+            "required": {
+                "inputcount": ("INT", {"default": 2, "min": 1, "max": 10, "step": 1}),
+            },
             "optional": {
                 f"value_{i}": (any,) for i in range(1, 11)  # Support up to 10 pairs
             }
@@ -38,15 +40,19 @@ class YellowBusV2:
         """All inputs are valid since we handle dynamic types."""
         return True
 
-    def route(self, **kwargs):
+    def route(self, inputcount, **kwargs):
         """Route inputs to outputs in order.
+        Each input maps to its corresponding output with the same type.
         If an input is not connected, its corresponding output will be None.
         """
         # Convert kwargs to list, preserving order
         values = []
-        for i in range(1, 11):
+        for i in range(1, inputcount + 1):
             key = f"value_{i}"
             values.append(kwargs.get(key, None))
+        # Fill remaining outputs with None
+        while len(values) < 10:
+            values.append(None)
         return tuple(values)
 
 NODE_CLASS_MAPPINGS = {

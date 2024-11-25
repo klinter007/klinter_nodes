@@ -7,45 +7,31 @@ app.registerExtension({
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function() {
                 onNodeCreated?.apply(this, arguments);
-                this.connections = 1;  // Start with one pair
-                
-                // Add UI controls
-                this.addWidget("button", "Add Connection", null, () => {
-                    this.addNewPair();
-                });
-                this.addWidget("button", "Remove Connection", null, () => {
-                    this.removePair();
-                });
-                
-                // Initialize the first pair
                 this.updateConnections();
             };
 
-            nodeType.prototype.addNewPair = function() {
-                if (this.connections < 10) {  // Maximum 10 pairs
-                    this.connections++;
-                    this.updateConnections();
-                }
-            };
-
-            nodeType.prototype.removePair = function() {
-                if (this.connections > 1) {  // Always keep at least one pair
-                    this.connections--;
+            // Update connections when inputcount changes
+            nodeType.prototype.onWidgetChange = function(name, value) {
+                if (name === "inputcount") {
                     this.updateConnections();
                 }
             };
 
             nodeType.prototype.updateConnections = function() {
+                const inputcount = this.widgets.find(w => w.name === "inputcount").value;
+                
                 // Remove excess connections
-                while (this.inputs.length > this.connections) {
-                    this.removeInput(this.inputs.length - 1);
-                    this.removeOutput(this.outputs.length - 1);
+                while (this.inputs.length > inputcount) {
+                    const index = this.inputs.length - 1;
+                    this.removeInput(index);
+                    this.removeOutput(index);
                 }
                 
                 // Add new connections
-                while (this.inputs.length < this.connections) {
+                while (this.inputs.length < inputcount) {
                     const index = this.inputs.length;
-                    this.addInput(`in_${index + 1}`, "*");  // Start with wildcard type
+                    // Each input has its corresponding output with the same type
+                    this.addInput(`value_${index + 1}`, "*");  // Start with wildcard type
                     this.addOutput(`out_${index + 1}`, "*");  // Start with wildcard type
                 }
                 
@@ -63,19 +49,19 @@ app.registerExtension({
                         if (otherNode && otherNode.outputs && otherNode.outputs[link_info.origin_slot]) {
                             const otherSlot = otherNode.outputs[link_info.origin_slot];
                             
-                            // Update input and output types to match
+                            // Update both input and its corresponding output to match the type
                             this.inputs[index].type = otherSlot.type;
-                            this.outputs[index].type = otherSlot.type;
+                            this.outputs[index].type = otherSlot.type;  // Keep same type for paired output
                             
                             // Update names to show the type
-                            this.inputs[index].name = `in_${index + 1} (${otherSlot.type})`;
+                            this.inputs[index].name = `value_${index + 1} (${otherSlot.type})`;
                             this.outputs[index].name = `out_${index + 1} (${otherSlot.type})`;
                         }
                     } else {
-                        // Reset to wildcard type when disconnected
+                        // Reset both input and output to wildcard type when disconnected
                         this.inputs[index].type = "*";
                         this.outputs[index].type = "*";
-                        this.inputs[index].name = `in_${index + 1}`;
+                        this.inputs[index].name = `value_${index + 1}`;
                         this.outputs[index].name = `out_${index + 1}`;
                     }
                 }
@@ -87,11 +73,13 @@ app.registerExtension({
 
             // Save/load the number of connections
             nodeType.prototype.onSerialize = function(o) {
-                o.connections = this.connections;
+                o.inputcount = this.widgets.find(w => w.name === "inputcount").value;
             };
 
             nodeType.prototype.onConfigure = function(o) {
-                this.connections = o.connections || 1;
+                if (o.inputcount !== undefined) {
+                    this.widgets.find(w => w.name === "inputcount").value = o.inputcount;
+                }
                 this.updateConnections();
             };
 
@@ -99,7 +87,7 @@ app.registerExtension({
             const onCloned = nodeType.prototype.onCloned;
             nodeType.prototype.onCloned = function(original) {
                 onCloned?.apply(this, arguments);
-                this.connections = original.connections;
+                this.widgets.find(w => w.name === "inputcount").value = original.widgets.find(w => w.name === "inputcount").value;
                 this.updateConnections();
             };
         }
