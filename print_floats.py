@@ -26,7 +26,7 @@ class PrintFloats:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("formatted_float",)
     FUNCTION = "convert"
-    CATEGORY = "utils"
+    CATEGORY = ["utils", "klinter"]
 
     def convert(self, audio_float: float | np.ndarray) -> tuple[str]:
         """Convert float or array of floats to formatted string.

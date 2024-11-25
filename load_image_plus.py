@@ -27,7 +27,8 @@ class LoadImagePlusKlinter:
     RETURN_TYPES = ("IMAGE", "MASK", "STRING")
     RETURN_NAMES = ("image", "mask", "filename")
     FUNCTION = "load_image"
-    CATEGORY = "image"
+    CATEGORY = ["image", "klinter"]
+    NODE_COLOR = "#4B0082"  # Indigo color
 
     def load_image(self, image: str) -> tuple[torch.Tensor, torch.Tensor, str]:
         """Load an image and return it along with its mask and filename.

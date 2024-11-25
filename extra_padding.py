@@ -1,8 +1,8 @@
+"""Extra Padding for Zoom Out node - adds padding to images for zoom out effects."""
+
 import torch
 import torch.nn.functional as F
 from comfy.utils import common_upscale
-
-# Remove the self-import line that was here!
 
 class ExtraPadding:
     """
@@ -31,7 +31,8 @@ class ExtraPadding:
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("padded_image", "mask")
     FUNCTION = "expand_image"
-    CATEGORY = "image"
+    CATEGORY = ["image", "klinter"]
+    NODE_COLOR = "#32CD32"  # Lime Green
 
     def expand_image(self, image, zoom_factor, mask_feather, upscale_method):
         zoom = float(zoom_factor.replace('x', ''))

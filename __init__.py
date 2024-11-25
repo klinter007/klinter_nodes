@@ -32,19 +32,19 @@ NODE_CLASS_MAPPINGS = {
 # Mapping of node identifiers to their display names for UI or logging purposes
 NODE_DISPLAY_NAME_MAPPINGS = {
     # String manipulation nodes
-    "concat": "Concat String",
-    "filter": "Filter String",
+    "concat": "Concat String - klinter",
+    "filter": "Filter String - klinter",
     
     # Utility nodes
-    "PrintFloats": "Print Floats",
-    "YellowBus": "Yellow Bus v2 ",
-    "ZoomOutComposer": "Zoom Out Composer",
-    "FolderLoader": "Folder Loader",
-    "ExtraPadding": "Extra Padding",
-    "SizeSelector": "Size Selector",
+    "PrintFloats": "Print Floats - klinter",
+    "YellowBus": "Yellow Bus v2 🚌 - klinter",
+    "ZoomOutComposer": "Zoom Out Composer - klinter",
+    "FolderLoader": "Folder Loader - klinter",
+    "ExtraPadding": "Extra Padding for Zoom Out - klinter",
+    "SizeSelector": "Size Selector - klinter",
     
     # Image nodes
-    "LoadImagePlusKlinter": "Load Image Plus",
+    "LoadImagePlusKlinter": "Load Image Plus - klinter",
 }
 
 # Define what symbols this module exports

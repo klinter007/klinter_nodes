@@ -22,8 +22,8 @@ class ZoomOutComposer:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("zoomed_frames",)
     FUNCTION = "apply_zoom"
-    CATEGORY = "Image Processing"
-
+    CATEGORY = ["image", "animation", "klinter"]
+    NODE_COLOR = "#4B0082"  # Indigo color
     def easeInOutSine(self, x: float) -> float:
         return -(cos(pi * x) - 1) / 2
 

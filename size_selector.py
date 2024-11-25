@@ -14,11 +14,11 @@ class SizeSelector:
             }
         }
 
-    RETURN_TYPES = ("INT", "INT")
-    RETURN_NAMES = ("width", "height")
+    RETURN_TYPES = ("INT", "INT", "STRING")
+    RETURN_NAMES = ("width", "height", "name")
     FUNCTION = "return_res"
+    CATEGORY = ["image", "utils", "klinter"]
     OUTPUT_NODE = True
-    CATEGORY = "Size"
 
     @classmethod
     def read_sizes(cls):
