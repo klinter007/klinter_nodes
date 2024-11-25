@@ -1,7 +1,7 @@
 """Dynamic routing node that can handle multiple input/output pairs with adaptive types."""
 
-# Our any instance wants to be a wildcard string
-any = "*"  
+# Define all possible types we might encounter
+POSSIBLE_TYPES = ["IMAGE", "LATENT", "MODEL", "CLIP", "VAE", "CONDITIONING", "MASK", "STRING", "INT", "FLOAT"]
 
 class YellowBusV2:
     """A dynamic routing node that can handle multiple input/output pairs.
@@ -17,11 +17,13 @@ class YellowBusV2:
                 "inputcount": ("INT", {"default": 2, "min": 1, "max": 10, "step": 1}),
             },
             "optional": {
-                f"value_{i}": (any,) for i in range(1, 11)  # Support up to 10 pairs
+                # Support any type for each input
+                f"value_{i}": tuple(POSSIBLE_TYPES) for i in range(1, 11)
             }
         }
     
-    RETURN_TYPES = tuple([any] * 10)  # Support up to 10 outputs
+    # Support any type for each output
+    RETURN_TYPES = tuple(POSSIBLE_TYPES)
     RETURN_NAMES = tuple([f"out_{i+1}" for i in range(10)])  # Named outputs for clarity
     FUNCTION = "route"
     CATEGORY = "klinter"
