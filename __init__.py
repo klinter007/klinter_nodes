@@ -9,6 +9,7 @@ from .folder_loader import FolderLoader
 from .extra_padding import ExtraPadding
 from .size_selector import SizeSelector
 from .load_image_plus import LoadImagePlusKlinter
+from .yellow_bus_v1_9 import YellowBusV1_9
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -18,6 +19,7 @@ NODE_CLASS_MAPPINGS = {
     
     # Core nodes
     "YellowBus": YellowBusV2,
+    "YellowBusV1_9": YellowBusV1_9,
     
     # Image processing nodes
     "ZoomOutComposer": ZoomOutComposer,
@@ -35,6 +37,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     
     # Core nodes
     "YellowBus": "Yellow Bus v2 🚌 - klinter",
+    "YellowBusV1_9": "Yellow Bus v1.9 - klinter",
     
     # Image processing nodes
     "ZoomOutComposer": "Zoom Out Composer - klinter",
