@@ -9,6 +9,7 @@ from .zoom_out_composer import ZoomOutComposer
 from .folder_loader import FolderLoader
 from .extra_padding import ExtraPadding
 from .size_selector import SizeSelector
+from .load_image_plus import LoadImagePlusKlinter
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -23,6 +24,9 @@ NODE_CLASS_MAPPINGS = {
     "FolderLoader": FolderLoader,
     "ExtraPadding": ExtraPadding,
     "SizeSelector": SizeSelector,
+    
+    # Image nodes
+    "LoadImagePlusKlinter": LoadImagePlusKlinter,
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -38,6 +42,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FolderLoader": "Folder Loader",
     "ExtraPadding": "Extra Padding",
     "SizeSelector": "Size Selector",
+    
+    # Image nodes
+    "LoadImagePlusKlinter": "Load Image Plus",
 }
 
 # Define what symbols this module exports
