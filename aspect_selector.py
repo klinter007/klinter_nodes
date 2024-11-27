@@ -21,7 +21,6 @@ class AspectSelector:
         return {
             "required": {
                 "aspect_ratio": (list(cls.SIZES.keys()),),
-                "control_before_generate": (["enable", "disable"], {"default": "enable"}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff})
             }
         }
@@ -32,8 +31,9 @@ class AspectSelector:
     CATEGORY = "klinter"
     OUTPUT_NODE = True
 
-    def return_res(self, aspect_ratio, control_before_generate, seed):
-        if control_before_generate == "enable":
+    def return_res(self, aspect_ratio, seed):
+        # If seed is not 0, use it to randomly select an aspect ratio
+        if seed != 0:
             random.seed(seed)
             aspect_ratio = random.choice(list(self.SIZES.keys()))
         
