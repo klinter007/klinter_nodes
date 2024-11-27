@@ -9,6 +9,7 @@ from .folder_loader import FolderLoader
 from .extra_padding import ExtraPadding
 from .size_selector import SizeSelector
 from .load_image_plus import LoadImagePlusKlinter
+from .aspect_selector import AspectSelector
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -25,6 +26,7 @@ NODE_CLASS_MAPPINGS = {
     "ExtraPadding": ExtraPadding,
     "SizeSelector": SizeSelector,
     "LoadImagePlus": LoadImagePlusKlinter,
+    "AspectSelector": AspectSelector,
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -42,6 +44,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ExtraPadding": "Extra Padding for Zoom Out - klinter",
     "SizeSelector": "Size Selector - klinter",
     "LoadImagePlus": "Load Image Plus - klinter",
+    "AspectSelector": "Aspect Ratio Selector - klinter",
 }
 
 # Define what symbols this module exports
