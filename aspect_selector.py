@@ -34,6 +34,8 @@ class AspectSelector:
 
     def return_res(self, aspect_ratio):
         if aspect_ratio == "random":
+            # Set a new random seed based on current time to ensure different selections
+            random.seed()
             # Choose a random aspect ratio excluding "random" itself
             aspect_ratio = random.choice(list(self.SIZES.keys()))
         
