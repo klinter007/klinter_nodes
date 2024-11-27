@@ -18,11 +18,11 @@ class AspectSelector:
     
     @classmethod
     def INPUT_TYPES(cls):
-        # Add "random" as the first option
-        aspects = ["random"] + list(cls.SIZES.keys())
         return {
             "required": {
-                "aspect_ratio": (aspects,),
+                "aspect_ratio": (list(cls.SIZES.keys()),),
+                "random_mode": (["enable", "disable"], {"default": "disable"}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff})
             }
         }
 
@@ -32,11 +32,9 @@ class AspectSelector:
     CATEGORY = "klinter"
     OUTPUT_NODE = True
 
-    def return_res(self, aspect_ratio):
-        if aspect_ratio == "random":
-            # Set a new random seed based on current time to ensure different selections
-            random.seed()
-            # Choose a random aspect ratio excluding "random" itself
+    def return_res(self, aspect_ratio, random_mode, seed):
+        if random_mode == "enable":
+            random.seed(seed)
             aspect_ratio = random.choice(list(self.SIZES.keys()))
         
         selected_info = self.SIZES[aspect_ratio]
