@@ -19,6 +19,7 @@ You can find me on:
 - [Load Image Plus](#load-image-plus)
 - [Extra Padding](#extra-padding)
 - [Zoom Out Composer](#zoom-out-composer)
+- [Speed Ramp](#speed-ramp)
 
 ## Available Nodes
 
@@ -83,6 +84,27 @@ Adds padding to images with various options.
 
 ### Zoom Out Composer
 Creates seamless infinite zoom animations by intelligently stitching images together. Perfect for creating mesmerizing zoom-out effects with your image sequence.
+
+### Speed Ramp
+A sophisticated video speed manipulation node that creates dynamic speed effects.
+
+**Features:**
+- Built-in speed curve presets:
+  * Double Peak: Creates two speed-up moments
+  * Quad Burst: Creates an intense speed-up with four peaks
+- Custom speed value support
+- Frame interpolation for smooth transitions
+- Base FPS control (1-120 fps)
+
+**Inputs:**
+- Frames: Input image sequence
+- Use Preset: Toggle between preset curves and custom speed
+- Preset Curve: Choose from "double_peak" or "quad_burst" presets
+- Base FPS: Set the base frame rate (1-120)
+- Speed Values: Custom speed multiplier (0.1x to 10x)
+
+**Outputs:**
+- Frames: Speed-adjusted image sequence
 
 ## Contributing
 

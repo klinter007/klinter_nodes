@@ -10,6 +10,7 @@ from .extra_padding import ExtraPadding
 from .size_selector import SizeSelector
 from .load_image_plus import LoadImagePlusKlinter
 from .aspect_selector import AspectSelector
+from .speed_ramp import SpeedRampNode
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -27,6 +28,7 @@ NODE_CLASS_MAPPINGS = {
     "SizeSelector": SizeSelector,
     "LoadImagePlus": LoadImagePlusKlinter,
     "AspectSelector": AspectSelector,
+    "SpeedRamp": SpeedRampNode
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -45,6 +47,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SizeSelector": "Size Selector - klinter",
     "LoadImagePlus": "Load Image Plus - klinter",
     "AspectSelector": "Aspect Ratio Selector - klinter",
+    "SpeedRamp": "Speed Ramp - klinter"
 }
 
 # Define what symbols this module exports
