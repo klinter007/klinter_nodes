@@ -1,5 +1,4 @@
 import { app } from "../../../scripts/app.js";
-import { ComfyWidgets } from "../../../scripts/widgets.js";
 
 let remainingIterations = 0;
 let isRunning = false;
@@ -7,86 +6,74 @@ let isRunning = false;
 app.registerExtension({
     name: "Klinter.QueueCounter",
     async setup() {
-        // Wait for queue button to be available
-        const queueButton = await new Promise((resolve) => {
-            const findQueueButton = () => {
-                const btn = document.querySelector('#queue-button');
-                if (btn) {
-                    resolve(btn);
-                } else {
-                    setTimeout(findQueueButton, 100);
-                }
-            };
-            findQueueButton();
-        });
+        // Wait for app.ui to be available
+        const waitForUI = () => {
+            return new Promise((resolve) => {
+                const check = () => {
+                    if (app.ui && app.ui.menuContainer) {
+                        resolve();
+                    } else {
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+        };
 
-        // Create container with ComfyUI styling
-        const container = document.createElement("div");
-        container.className = "comfy-queue-counter comfy-menu-btns";
-        container.style.cssText = "display: flex; gap: 5px; align-items: center; margin: 6px 0;";
+        await waitForUI();
 
-        // Add styles that match ComfyUI
+        // Create our button group
+        const queueCounterGroup = document.createElement("div");
+        queueCounterGroup.className = "comfy-menu-btns";
+        
+        // Add styles
         const style = document.createElement('style');
         style.textContent = `
-            .comfy-queue-counter {
-                display: flex;
-                gap: 5px;
-                align-items: center;
-                margin: 6px 0;
-                padding: 0 10px;
-            }
-            .comfy-queue-counter input {
+            .queue-counter-input {
                 width: 60px;
                 color: var(--input-text);
                 background-color: var(--comfy-input-bg);
                 border: 1px solid var(--border-color);
                 border-radius: 4px;
                 padding: 2px 4px;
-            }
-            .comfy-queue-counter button {
-                color: var(--input-text);
-                background-color: var(--comfy-input-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 4px;
-                padding: 4px 8px;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }
-            .comfy-queue-counter button:hover {
-                background-color: var(--comfy-input-bg-hover);
-            }
-            .comfy-queue-counter button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
+                margin: 0 5px;
             }
         `;
         document.head.appendChild(style);
 
-        // Create input for iterations
+        // Create input
         const input = document.createElement("input");
         input.type = "number";
         input.min = "1";
         input.value = "1";
+        input.className = "queue-counter-input";
         input.title = "Number of times to run the queue";
 
-        // Create start button
+        // Create buttons using ComfyUI's button style
         const startButton = document.createElement("button");
-        startButton.textContent = "Start Auto Run";
+        startButton.textContent = "Auto Run";
+        startButton.className = "comfy-button";
         startButton.title = "Start automatic queue processing";
 
-        // Create stop button
         const stopButton = document.createElement("button");
         stopButton.textContent = "Stop";
+        stopButton.className = "comfy-button";
         stopButton.title = "Stop automatic queue processing";
         stopButton.disabled = true;
 
-        // Add elements to container
-        container.appendChild(input);
-        container.appendChild(startButton);
-        container.appendChild(stopButton);
+        // Add elements to group
+        queueCounterGroup.appendChild(input);
+        queueCounterGroup.appendChild(startButton);
+        queueCounterGroup.appendChild(stopButton);
 
-        // Insert after queue button
-        queueButton.parentElement.insertBefore(container, queueButton.nextSibling);
+        // Add group to menu
+        const queueButton = app.ui.menuContainer.querySelector('#queue-button');
+        if (queueButton && queueButton.parentElement) {
+            queueButton.parentElement.insertBefore(queueCounterGroup, queueButton.nextSibling);
+        } else {
+            // Fallback - add to menu container
+            app.ui.menuContainer.appendChild(queueCounterGroup);
+        }
 
         // Queue monitoring function
         async function checkQueue() {
@@ -141,5 +128,8 @@ app.registerExtension({
         // Add event listeners
         startButton.addEventListener("click", startAutoRun);
         stopButton.addEventListener("click", stopAutoRun);
+
+        // Log for debugging
+        console.log("Queue Counter extension initialized");
     }
 });
