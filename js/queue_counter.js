@@ -84,6 +84,15 @@ app.registerExtension({
         testButton.style.zIndex = "1000";
         document.body.appendChild(testButton);
 
+        // Create a counter display
+        const counterDisplay = document.createElement("span");
+        counterDisplay.textContent = "Remaining Iterations: 0";
+        counterDisplay.style.position = "fixed";
+        counterDisplay.style.bottom = "40px";
+        counterDisplay.style.right = "10px";
+        counterDisplay.style.zIndex = "1000";
+        document.body.appendChild(counterDisplay);
+
         // Queue monitoring function
         async function checkQueue() {
             if (!isRunning) return;
@@ -93,6 +102,7 @@ app.registerExtension({
                 if (status.exec_info.queue_remaining === 0) {
                     if (remainingIterations > 0) {
                         remainingIterations--;
+                        counterDisplay.textContent = `Remaining Iterations: ${remainingIterations}`;
                         if (remainingIterations === 0) {
                             stopAutoRun();
                             return;
@@ -115,6 +125,7 @@ app.registerExtension({
             }
 
             remainingIterations = iterations - 1; // -1 because first run is immediate
+            counterDisplay.textContent = `Remaining Iterations: ${remainingIterations + 1}`;
             isRunning = true;
             
             if (input) {
@@ -132,7 +143,8 @@ app.registerExtension({
         function stopAutoRun() {
             isRunning = false;
             remainingIterations = 0;
-            
+            counterDisplay.textContent = "Remaining Iterations: 0";
+
             if (input) {
                 input.disabled = false;
                 startButton.disabled = false;
