@@ -84,6 +84,17 @@ app.registerExtension({
         testButton.style.zIndex = "1000";
         document.body.appendChild(testButton);
 
+        // Create an input field for setting iterations
+        const iterationInput = document.createElement("input");
+        iterationInput.type = "number";
+        iterationInput.min = "1";
+        iterationInput.value = "5"; // Default value
+        iterationInput.style.position = "fixed";
+        iterationInput.style.bottom = "10px";
+        iterationInput.style.right = "120px";
+        iterationInput.style.zIndex = "1000";
+        document.body.appendChild(iterationInput);
+
         // Create a counter display
         const counterDisplay = document.createElement("span");
         counterDisplay.textContent = "Remaining Iterations: 0";
@@ -118,21 +129,13 @@ app.registerExtension({
         }
 
         // Start auto run function
-        function startAutoRun(iterations) {
-            if (iterations === undefined) {
-                const iterations = parseInt(input.value);
-                if (iterations < 1) return;
-            }
+        function startAutoRun() {
+            const iterations = parseInt(iterationInput.value);
+            if (iterations < 1) return;
 
             remainingIterations = iterations - 1; // -1 because first run is immediate
             counterDisplay.textContent = `Remaining Iterations: ${remainingIterations + 1}`;
             isRunning = true;
-            
-            if (input) {
-                input.disabled = true;
-                startButton.disabled = true;
-                stopButton.disabled = false;
-            }
 
             // First run uses instant queue
             app.queuePrompt();
@@ -144,25 +147,19 @@ app.registerExtension({
             isRunning = false;
             remainingIterations = 0;
             counterDisplay.textContent = "Remaining Iterations: 0";
-
-            if (input) {
-                input.disabled = false;
-                startButton.disabled = false;
-                stopButton.disabled = true;
-            }
+            testButton.textContent = "Test Auto Run";
         }
 
         // Add event listeners
-        startButton.addEventListener("click", () => startAutoRun());
+        startButton.addEventListener("click", () => startAutoRun(parseInt(input.value)));
         stopButton.addEventListener("click", stopAutoRun);
 
         // Add event listener to the test button
         testButton.addEventListener("click", () => {
             if (isRunning) {
                 stopAutoRun();
-                testButton.textContent = "Test Auto Run";
             } else {
-                startAutoRun(5); // Example iteration count
+                startAutoRun();
                 testButton.textContent = "Stop Auto Run";
             }
         });
