@@ -1,4 +1,5 @@
 import { app } from "../../../scripts/app.js";
+import { ComfyWidgets } from "../../../scripts/widgets.js";
 
 let remainingIterations = 0;
 let isRunning = false;
@@ -6,12 +7,25 @@ let isRunning = false;
 app.registerExtension({
     name: "Klinter.QueueCounter",
     async setup() {
-        // Create container
+        // Wait for queue button to be available
+        const queueButton = await new Promise((resolve) => {
+            const findQueueButton = () => {
+                const btn = document.querySelector('#queue-button');
+                if (btn) {
+                    resolve(btn);
+                } else {
+                    setTimeout(findQueueButton, 100);
+                }
+            };
+            findQueueButton();
+        });
+
+        // Create container with ComfyUI styling
         const container = document.createElement("div");
-        container.className = "comfy-queue-counter";
+        container.className = "comfy-queue-counter comfy-menu-btns";
         container.style.cssText = "display: flex; gap: 5px; align-items: center; margin: 6px 0;";
 
-        // Add styles
+        // Add styles that match ComfyUI
         const style = document.createElement('style');
         style.textContent = `
             .comfy-queue-counter {
@@ -19,135 +33,113 @@ app.registerExtension({
                 gap: 5px;
                 align-items: center;
                 margin: 6px 0;
+                padding: 0 10px;
             }
             .comfy-queue-counter input {
+                width: 60px;
                 color: var(--input-text);
                 background-color: var(--comfy-input-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 8px;
-                width: 60px;
+                border-radius: 4px;
                 padding: 2px 4px;
-                font-size: inherit;
             }
             .comfy-queue-counter button {
                 color: var(--input-text);
                 background-color: var(--comfy-input-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 2px 8px;
+                border-radius: 4px;
+                padding: 4px 8px;
                 cursor: pointer;
-                font-size: inherit;
+                transition: background-color 0.2s;
             }
-            .comfy-queue-counter button:hover:not(:disabled) {
-                filter: brightness(1.2);
+            .comfy-queue-counter button:hover {
+                background-color: var(--comfy-input-bg-hover);
             }
             .comfy-queue-counter button:disabled {
-                opacity: 0.6;
+                opacity: 0.5;
                 cursor: not-allowed;
             }
         `;
         document.head.appendChild(style);
 
-        // Add label
-        const label = document.createElement("span");
-        label.innerText = "Auto Runs:";
-        label.style.color = "var(--descrip-text)";
-        container.appendChild(label);
-
-        // Add input
+        // Create input for iterations
         const input = document.createElement("input");
         input.type = "number";
-        input.min = "0";
-        input.value = "0";
-        input.addEventListener("change", (e) => {
-            remainingIterations = parseInt(e.target.value);
-        });
-        container.appendChild(input);
+        input.min = "1";
+        input.value = "1";
+        input.title = "Number of times to run the queue";
 
-        // Add start button
+        // Create start button
         const startButton = document.createElement("button");
-        startButton.innerText = "Start Auto Run";
-        startButton.onclick = () => {
-            if (remainingIterations > 0 && !isRunning) {
-                isRunning = true;
-                startButton.disabled = true;
-                input.disabled = true;
-                app.queuePrompt();
-                startMonitoring();
-            }
-        };
-        container.appendChild(startButton);
+        startButton.textContent = "Start Auto Run";
+        startButton.title = "Start automatic queue processing";
 
-        // Add stop button
+        // Create stop button
         const stopButton = document.createElement("button");
-        stopButton.innerText = "Stop";
-        stopButton.onclick = () => {
-            isRunning = false;
-            startButton.disabled = false;
-            input.disabled = false;
-            remainingIterations = parseInt(input.value);
-        };
+        stopButton.textContent = "Stop";
+        stopButton.title = "Stop automatic queue processing";
+        stopButton.disabled = true;
+
+        // Add elements to container
+        container.appendChild(input);
+        container.appendChild(startButton);
         container.appendChild(stopButton);
 
-        // Add to queue controls - try different selectors until we find the right spot
-        function addToInterface() {
-            // Try to find the queue controls
-            const queueButtons = document.querySelector(".comfy-menu-btns");
-            if (queueButtons) {
-                queueButtons.parentElement.insertBefore(container, queueButtons.nextSibling);
-                console.log("Added queue counter to interface");
-                return true;
-            }
-            return false;
-        }
+        // Insert after queue button
+        queueButton.parentElement.insertBefore(container, queueButton.nextSibling);
 
-        // Keep trying to add the interface until we succeed
-        function tryAddInterface() {
-            if (!addToInterface()) {
-                console.log("Queue controls not found, retrying...");
-                setTimeout(tryAddInterface, 1000);
-            }
-        }
-        tryAddInterface();
-
-        function startMonitoring() {
-            const checkQueueStatus = async () => {
-                if (!isRunning) return;
-
-                try {
-                    const status = await app.api.getQueueStatus();
-                    if (status.exec_info.queue_remaining === 0) {
+        // Queue monitoring function
+        async function checkQueue() {
+            if (!isRunning) return;
+            
+            try {
+                const status = await app.api.getQueueStatus();
+                if (status.exec_info.queue_remaining === 0) {
+                    if (remainingIterations > 0) {
                         remainingIterations--;
-                        input.value = remainingIterations;
-
-                        if (remainingIterations > 0) {
-                            // Small delay to ensure clean state
-                            setTimeout(() => {
-                                if (isRunning) {
-                                    app.queuePrompt();
-                                    checkQueueStatus();
-                                }
-                            }, 100);
-                        } else {
-                            // All done
-                            isRunning = false;
-                            startButton.disabled = false;
-                            input.disabled = false;
+                        if (remainingIterations === 0) {
+                            stopAutoRun();
+                            return;
                         }
-                    } else {
-                        // Keep checking while queue is running
-                        setTimeout(checkQueueStatus, 500);
+                        app.queuePrompt();
                     }
-                } catch (error) {
-                    console.error("Error checking queue status:", error);
-                    // On error, stop the auto-run
-                    isRunning = false;
-                    startButton.disabled = false;
-                    input.disabled = false;
                 }
-            };
-
-            checkQueueStatus();
+                setTimeout(checkQueue, 1000);
+            } catch (error) {
+                console.error("Error checking queue:", error);
+                stopAutoRun();
+            }
         }
+
+        // Start auto run function
+        function startAutoRun() {
+            const iterations = parseInt(input.value);
+            if (iterations < 1) return;
+
+            remainingIterations = iterations - 1; // -1 because first run is immediate
+            isRunning = true;
+            
+            input.disabled = true;
+            startButton.disabled = true;
+            stopButton.disabled = false;
+
+            // First run uses instant queue
+            app.queuePrompt();
+            checkQueue();
+        }
+
+        // Stop auto run function
+        function stopAutoRun() {
+            isRunning = false;
+            remainingIterations = 0;
+            
+            input.disabled = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        }
+
+        // Add event listeners
+        startButton.addEventListener("click", startAutoRun);
+        stopButton.addEventListener("click", stopAutoRun);
     }
 });
