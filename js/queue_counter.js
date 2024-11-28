@@ -75,6 +75,15 @@ app.registerExtension({
             app.ui.menuContainer.appendChild(queueCounterGroup);
         }
 
+        // Create a standalone button for testing
+        const testButton = document.createElement("button");
+        testButton.textContent = "Test Auto Run";
+        testButton.style.position = "fixed";
+        testButton.style.bottom = "10px";
+        testButton.style.right = "10px";
+        testButton.style.zIndex = "1000";
+        document.body.appendChild(testButton);
+
         // Queue monitoring function
         async function checkQueue() {
             if (!isRunning) return;
@@ -99,16 +108,20 @@ app.registerExtension({
         }
 
         // Start auto run function
-        function startAutoRun() {
-            const iterations = parseInt(input.value);
-            if (iterations < 1) return;
+        function startAutoRun(iterations) {
+            if (iterations === undefined) {
+                const iterations = parseInt(input.value);
+                if (iterations < 1) return;
+            }
 
             remainingIterations = iterations - 1; // -1 because first run is immediate
             isRunning = true;
             
-            input.disabled = true;
-            startButton.disabled = true;
-            stopButton.disabled = false;
+            if (input) {
+                input.disabled = true;
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            }
 
             // First run uses instant queue
             app.queuePrompt();
@@ -120,14 +133,27 @@ app.registerExtension({
             isRunning = false;
             remainingIterations = 0;
             
-            input.disabled = false;
-            startButton.disabled = false;
-            stopButton.disabled = true;
+            if (input) {
+                input.disabled = false;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            }
         }
 
         // Add event listeners
-        startButton.addEventListener("click", startAutoRun);
+        startButton.addEventListener("click", () => startAutoRun());
         stopButton.addEventListener("click", stopAutoRun);
+
+        // Add event listener to the test button
+        testButton.addEventListener("click", () => {
+            if (isRunning) {
+                stopAutoRun();
+                testButton.textContent = "Test Auto Run";
+            } else {
+                startAutoRun(5); // Example iteration count
+                testButton.textContent = "Stop Auto Run";
+            }
+        });
 
         // Log for debugging
         console.log("Queue Counter extension initialized");
