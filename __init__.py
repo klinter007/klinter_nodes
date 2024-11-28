@@ -55,3 +55,10 @@ __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
 
 # Add this section to specify the location of JavaScript files
 WEB_DIRECTORY = "./js"
+
+# List of JavaScript files to include
+WEB_EXTENSIONS = [
+    "yellow_bus.js",
+    "expandable_yellow_bus.js",
+    "queue_counter.js"  
+]
