@@ -1,0 +1,34 @@
+ComfyUI Queue Counter Extension - WebSocket Handling Strategy
+
+Key Observations:
+1. WebSocket Message Handling Approach
+- Intercept and extend existing WebSocket onmessage handler
+- Preserve original message handling functionality
+- Add custom logic for workflow tracking
+
+2. Completion Detection Criteria
+Two primary conditions for workflow completion:
+a) 'execution_success' message type
+b) 'status' message with queue_remaining = 0
+
+3. Implementation Patterns
+- Use setTimeout for controlled next-run triggering
+- Maintain state variables (currentRun, totalRuns, isRunning)
+- Graceful error handling with try-catch
+- Logging for debugging and tracking
+
+4. Critical Design Considerations
+- Non-destructive message handler modification
+- Robust error recovery
+- Minimal interference with existing ComfyUI workflow
+- Flexible multi-run management
+
+5. Potential Future Improvements
+- More granular error handling
+- Configurable retry mechanisms
+- Enhanced logging and telemetry
+
+Lessons Learned:
+- WebSocket interception requires careful state management
+- Always preserve original handler functionality
+- Use explicit state tracking for multi-run workflows

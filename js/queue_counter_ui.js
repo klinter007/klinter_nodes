@@ -58,6 +58,7 @@ app.registerExtension({
             padding: 5px;
             border-radius: 3px;
         `;
+        iterationInput.classList.add('queue-counter-iterations');
         container.appendChild(iterationInput);
 
         // Create status display
@@ -68,6 +69,7 @@ app.registerExtension({
             text-align: center;
             font-size: 14px;
         `;
+        statusDisplay.classList.add('queue-counter-status');
         container.appendChild(statusDisplay);
 
         // Create action button
@@ -81,7 +83,25 @@ app.registerExtension({
             border-radius: 3px;
             cursor: pointer;
         `;
+        actionButton.classList.add('queue-counter-action');
         container.appendChild(actionButton);
+
+        // Action button click handler
+        actionButton.addEventListener('click', () => {
+            // Check if ui object has the necessary methods
+            if (ui && ui.actionButton && ui.iterationInput) {
+                // Toggle between start and stop
+                if (actionButton.textContent === 'Start') {
+                    actionButton.textContent = 'Stop';
+                    actionButton.style.backgroundColor = '#ff4136';  // Red
+                    ui.iterationInput.disabled = true;
+                } else {
+                    actionButton.textContent = 'Start';
+                    actionButton.style.backgroundColor = '#454545';  // Gray
+                    ui.iterationInput.disabled = false;
+                }
+            }
+        });
 
         // Make container draggable
         let isDragging = false;
@@ -142,19 +162,19 @@ app.registerExtension({
             iterationInput,
             statusDisplay,
             actionButton,
-            updateUI(isRunning, currentRun, totalRuns, wasInterrupted) {
-                if (isRunning) {
-                    actionButton.textContent = `Running (${currentRun}/${totalRuns})`;
-                    actionButton.style.backgroundColor = 'yellow';
-                    actionButton.style.color = 'black';
-                    statusDisplay.textContent = `Run ${currentRun} in progress`;
-                } else {
+            updateRunDisplay(currentRun, totalRuns, chosenRuns) {
+                const statusDisplay = container.querySelector('.queue-counter-status');
+                const actionButton = container.querySelector('.queue-counter-action');
+                const iterationInput = container.querySelector('.queue-counter-iterations');
+
+                // Update status text to show current run progress relative to chosen runs
+                statusDisplay.textContent = `Completed ${currentRun}/${chosenRuns} runs`;
+
+                // When all runs are complete, reset button and input
+                if (currentRun >= chosenRuns) {
                     actionButton.textContent = 'Start';
-                    actionButton.style.backgroundColor = wasInterrupted ? 'red' : '#454545';
-                    actionButton.style.color = wasInterrupted ? 'white' : 'white';
-                    statusDisplay.textContent = wasInterrupted 
-                        ? 'Workflow Interrupted' 
-                        : currentRun > 0 ? `Completed ${currentRun} runs` : 'Ready';
+                    actionButton.style.backgroundColor = '#2ecc40';  // Green
+                    iterationInput.disabled = false;
                 }
             }
         };
