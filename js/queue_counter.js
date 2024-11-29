@@ -1,226 +1,179 @@
 import { app } from "../../../scripts/app.js";
+import { api } from "../../../scripts/api.js";
+
+console.log("Queue Counter Extension: Script Loaded");
 
 app.registerExtension({
     name: "Klinter.QueueCounter",
-    async setup() {
-        // Wait for app.ui to be available
-        const waitForUI = () => {
-            return new Promise((resolve) => {
-                const check = () => {
-                    if (app.ui && app.ui.menuContainer) {
-                        resolve();
-                    } else {
-                        setTimeout(check, 100);
-                    }
-                };
-                check();
-            });
-        };
+    async setup(app) {
+        console.log("Queue Counter Extension: Setup Started");
 
-        await waitForUI();
-
-        // Create our button group
-        const queueCounterGroup = document.createElement("div");
-        queueCounterGroup.className = "comfy-menu-btns";
-        
-        // Add styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .queue-counter-input {
-                width: 60px;
-                color: var(--input-text);
-                background-color: var(--comfy-input-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 4px;
-                padding: 2px 4px;
-                margin: 0 5px;
-            }
+        // Create container for queue counter
+        const container = document.createElement('div');
+        container.id = 'klinter-queue-counter';
+        container.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
         `;
-        document.head.appendChild(style);
 
-        // Create input
-        const input = document.createElement("input");
-        input.type = "number";
-        input.min = "1";
-        input.value = "1";
-        input.className = "queue-counter-input";
-        input.title = "Number of times to run the queue";
+        // Create input for iterations
+        const iterationInput = document.createElement('input');
+        iterationInput.type = 'number';
+        iterationInput.min = '1';
+        iterationInput.max = '100';
+        iterationInput.value = '1';
+        iterationInput.style.width = '50px';
+        iterationInput.style.marginRight = '10px';
+        iterationInput.placeholder = 'Runs';
 
-        // Create buttons using ComfyUI's button style
-        const startButton = document.createElement("button");
-        startButton.textContent = "Auto Run";
-        startButton.className = "comfy-button";
-        startButton.title = "Start automatic queue processing";
+        // Create button
+        const actionButton = document.createElement('button');
+        actionButton.textContent = 'Auto Run';
+        actionButton.style.padding = '5px 10px';
+        actionButton.style.backgroundColor = 'white';
+        actionButton.style.color = 'black';
+        actionButton.style.border = 'none';
+        actionButton.style.borderRadius = '3px';
 
-        const stopButton = document.createElement("button");
-        stopButton.textContent = "Stop";
-        stopButton.className = "comfy-button";
-        stopButton.title = "Stop automatic queue processing";
-        stopButton.disabled = true;
+        // Create status display
+        const statusDisplay = document.createElement('div');
+        statusDisplay.textContent = '';
+        statusDisplay.style.marginLeft = '10px';
+        statusDisplay.style.flex = '1';
 
-        // Add elements to group
-        queueCounterGroup.appendChild(input);
-        queueCounterGroup.appendChild(startButton);
-        queueCounterGroup.appendChild(stopButton);
+        // Append elements to container
+        container.appendChild(iterationInput);
+        container.appendChild(actionButton);
+        container.appendChild(statusDisplay);
 
-        // Add group to menu
-        const queueButton = app.ui.menuContainer.querySelector('#queue-button');
-        if (queueButton && queueButton.parentElement) {
-            queueButton.parentElement.insertBefore(queueCounterGroup, queueButton.nextSibling);
-        } else {
-            // Fallback - add to menu container
-            app.ui.menuContainer.appendChild(queueCounterGroup);
-        }
-
-        // Tracking variables
-        let remainingIterations = 0;
-        let isRunning = false;
-
-        // Create a counter display
-        const counterDisplay = document.createElement("span");
-        counterDisplay.textContent = "Remaining Iterations: 0";
-        counterDisplay.style.position = "fixed";
-        counterDisplay.style.bottom = "40px";
-        counterDisplay.style.right = "10px";
-        counterDisplay.style.zIndex = "1000";
-        document.body.appendChild(counterDisplay);
-
-        // Queue monitoring function
-        async function checkQueue() {
-            if (!isRunning) return;
-            
-            try {
-                const status = await app.api.getQueueStatus();
-                if (status.exec_info.queue_remaining === 0) {
-                    if (remainingIterations > 0) {
-                        remainingIterations--;
-                        counterDisplay.textContent = `Remaining Iterations: ${remainingIterations}`;
-                        if (remainingIterations === 0) {
-                            stopAutoRun();
-                            return;
-                        }
-                        app.queuePrompt();
-                    }
-                }
-                setTimeout(checkQueue, 1000);
-            } catch (error) {
-                console.error("Error checking queue:", error);
-                stopAutoRun();
-            }
-        }
-
-        // Start auto run function
-        function startAutoRun() {
-            const iterations = parseInt(input.value);
-            if (iterations < 1) return;
-
-            remainingIterations = iterations - 1; // -1 because first run is immediate
-            counterDisplay.textContent = `Remaining Iterations: ${remainingIterations + 1}`;
-            isRunning = true;
-            startButton.disabled = true;
-            stopButton.disabled = false;
-
-            // First run uses instant queue
-            app.queuePrompt();
-            checkQueue();
-        }
-
-        // Stop auto run function
-        function stopAutoRun() {
-            isRunning = false;
-            remainingIterations = 0;
-            counterDisplay.textContent = "Remaining Iterations: 0";
-            startButton.disabled = false;
-            stopButton.disabled = true;
-        }
-
-        // Add event listeners
-        startButton.addEventListener("click", () => startAutoRun());
-        stopButton.addEventListener("click", stopAutoRun);
-
-        // Attach to ComfyUI's WebSocket
-        const originalWebSocket = window.WebSocket;
-        window.WebSocket = class extends originalWebSocket {
-            constructor(url, protocols) {
-                super(url, protocols);
-                this.addEventListener('message', (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-                        this.handleWebSocketEvent(data);
-                    } catch (e) {
-                        console.error('WebSocket message parsing error', e);
-                    }
-                });
-            }
-
-            handleWebSocketEvent(data) {
-                // Handle different WebSocket events
-                if (data.type === 'status') {
-                    this.updateQueueStatus(data.status);
-                } else if (data.type === 'executing') {
-                    this.checkQueueCompletion();
-                }
-            }
-
-            async updateQueueStatus(status) {
-                // Update queue status from WebSocket
-                if (isRunning) {
-                    const pendingQueue = status.queue_pending || [];
-                    const runningQueue = status.queue_running || [];
-                    
-                    if (pendingQueue.length === 0 && runningQueue.length === 0) {
-                        await this.processNextIteration();
-                    }
-                }
-            }
-
-            async checkQueueCompletion() {
-                // Additional check for queue completion
-                if (isRunning) {
-                    const queueResponse = await fetch('/queue');
-                    const queueData = await queueResponse.json();
-                    
-                    if (queueData.queue_pending.length === 0 && queueData.queue_running.length === 0) {
-                        await this.processNextIteration();
-                    }
-                }
-            }
-
-            async processNextIteration() {
-                remainingIterations--;
-                counterDisplay.textContent = `Remaining Iterations: ${remainingIterations}`;
-
-                if (remainingIterations > 0) {
-                    await this.triggerQueueRun();
-                } else {
-                    stopAutoRun();
-                }
-            }
-
-            async triggerQueueRun() {
-                try {
-                    const response = await fetch('/prompt', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            prompt: app.graph.serialize(),
-                            client_id: app.clientId
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to trigger queue run');
-                    }
-                } catch (error) {
-                    console.error('Queue run error:', error);
-                    stopAutoRun();
-                }
+        // Function to add container to body
+        const addContainerToBody = () => {
+            console.log("Queue Counter: Attempting to add container to body");
+            if (document.body) {
+                document.body.appendChild(container);
+                console.log("Queue Counter: Container added to body");
+            } else {
+                console.error("Queue Counter: document.body not available");
+                // Retry after a short delay
+                setTimeout(addContainerToBody, 1000);
             }
         };
 
-        // Log for debugging
-        console.log("Queue Counter extension initialized");
+        // Try to add container immediately and set up a fallback
+        addContainerToBody();
+
+        // Queue management class
+        class QueueManager {
+            constructor() {
+                this.totalRuns = 1;
+                this.currentRun = 0;
+                this.isRunning = false;
+                this.wasInterrupted = false;
+            }
+
+            start() {
+                if (this.isRunning) return;
+
+                this.totalRuns = Math.max(1, Math.min(parseInt(iterationInput.value, 10), 100));
+                this.currentRun = 0;
+                this.isRunning = true;
+                this.wasInterrupted = false;
+
+                this.updateUI();
+                this.triggerNextRun();
+            }
+
+            triggerNextRun() {
+                if (this.wasInterrupted) {
+                    this.stop();
+                    return;
+                }
+
+                if (this.currentRun >= this.totalRuns) {
+                    this.stop();
+                    return;
+                }
+
+                this.currentRun++;
+                app.queuePrompt(0, 1);
+                this.updateUI();
+            }
+
+            stop(interrupted = false) {
+                this.isRunning = false;
+                this.wasInterrupted = interrupted;
+                this.updateUI();
+            }
+
+            updateUI() {
+                if (this.isRunning) {
+                    actionButton.textContent = `Running (${this.currentRun}/${this.totalRuns})`;
+                    actionButton.style.backgroundColor = 'yellow';
+                    actionButton.style.color = 'black';
+                    statusDisplay.textContent = `Run ${this.currentRun} in progress`;
+                } else {
+                    actionButton.textContent = 'Auto Run';
+                    actionButton.style.backgroundColor = this.wasInterrupted ? 'red' : 'white';
+                    actionButton.style.color = this.wasInterrupted ? 'white' : 'black';
+                    statusDisplay.textContent = this.wasInterrupted 
+                        ? 'Workflow Interrupted' 
+                        : `Completed ${this.currentRun} runs`;
+                }
+            }
+        }
+
+        const queueManager = new QueueManager();
+
+        // Hijack API interrupt method
+        const originalApiInterrupt = api.interrupt;
+        api.interrupt = function() {
+            // Call original interrupt method
+            originalApiInterrupt.apply(this, arguments);
+            
+            // If queue manager is running, mark as interrupted
+            if (queueManager.isRunning) {
+                queueManager.stop(true);
+            }
+        };
+
+        // Add event listener to button
+        actionButton.addEventListener('click', () => {
+            console.log("Queue Counter: Button clicked");
+            if (!queueManager.isRunning) {
+                queueManager.start();
+            } else {
+                queueManager.stop(true);
+            }
+        });
+
+        // Listen for queue completion
+        const completionEvents = [
+            'prompt_queue_complete', 
+            'prompt_queue_end', 
+            'execution_end'
+        ];
+
+        completionEvents.forEach(eventName => {
+            app.addEventListener(eventName, () => {
+                if (queueManager.isRunning && !queueManager.wasInterrupted) {
+                    queueManager.triggerNextRun();
+                }
+            });
+        });
+
+        console.log("Queue Counter Extension: Setup Complete");
     }
 });
+
+// Ensure the script is loaded
+console.log("Queue Counter Extension: Script Processed");
