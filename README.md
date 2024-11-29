@@ -5,7 +5,7 @@ Instant Queue Limiter is a lightweight ComfyUI extension designed to help users 
 
 ## Key Features
 - Run multiple workflow iterations with a single click
-- Limit the number of concurrent runs (1-100)
+- Limit the number of concurrent runs (1-255)
 - Prevent RAM buildup by controlling queue size
 - Real-time run tracking and status updates
 - Draggable, non-intrusive widget interface
@@ -26,9 +26,19 @@ The Instant Queue Limiter allows you to:
 1. Place in ComfyUI's `custom_nodes` directory
 2. Restart ComfyUI
 
+## Widgets
+
+### Queue Counter
+A floating widget that lets you:
+- Set number of runs (1-255)
+- Start/Stop batch processing
+- Monitor current run progress
+- Track total runs completed
+
 ## Configuration
 - Enable/Disable widget in ComfyUI Settings
 - Adjust run count directly in the widget
+- Widget can be dragged anywhere on the interface
 
 ## Benefits
 - Prevent system slowdowns
@@ -37,3 +47,8 @@ The Instant Queue Limiter allows you to:
 
 ## License
 Open-source, free to use and modify
+
+## Connect with Me
+- Twitter: [@klinter_tech](https://twitter.com/klinter_tech)
+- Instagram: [@klinter.ai](https://instagram.com/klinter.ai)
+- GitHub: [klinter](https://github.com/klinter)
