@@ -38,7 +38,6 @@ app.registerExtension({
             align-items: center;
             gap: 10px;
             min-width: 300px;
-            cursor: move;
             border: 1px solid #505050;
         `;
 
@@ -56,6 +55,8 @@ app.registerExtension({
             font-size: 12px;
             border: 1px solid #505050;
             border-bottom: none;
+            cursor: move;
+            user-select: none;
         `;
         container.appendChild(titleElement);
 
@@ -89,6 +90,43 @@ app.registerExtension({
         container.appendChild(actionButton);
         container.appendChild(statusDisplay);
 
+        // Draggable functionality
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // Prevent text selection during drag
+        titleElement.addEventListener('selectstart', (e) => e.preventDefault());
+
+        // Attach event listeners for dragging
+        titleElement.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevent default to stop text selection
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            isDragging = true;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            container.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
         // Function to add container to body
         const addContainerToBody = () => {
             if (document.body) {
@@ -100,52 +138,6 @@ app.registerExtension({
 
         // Try to add container immediately
         addContainerToBody();
-
-        // Draggable functionality
-        let isDragging = false;
-        let currentX;
-        let currentY;
-        let initialX;
-        let initialY;
-        let xOffset = 0;
-        let yOffset = 0;
-
-        container.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
-
-        function dragStart(e) {
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-
-            if (e.target === container || e.target === titleElement) {
-                isDragging = true;
-            }
-        }
-
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
-
-                xOffset = currentX;
-                yOffset = currentY;
-
-                setTranslate(currentX, currentY, container);
-            }
-        }
-
-        function dragEnd(e) {
-            initialX = currentX;
-            initialY = currentY;
-
-            isDragging = false;
-        }
-
-        function setTranslate(xPos, yPos, el) {
-            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
-        }
 
         // Multi-run logic
         const logic = new window.QueueCounterLogic();
