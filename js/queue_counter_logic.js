@@ -56,26 +56,36 @@ app.registerExtension({
                                 
                                 if (parsedData.type === 'status') {
                                     const queueRemaining = parsedData.data?.status?.exec_info?.queue_remaining;
-                                    const executionComplete = parsedData.data?.status?.exec_info?.queue_remaining === 0;
                                     
-                                    console.log('Queue Counter Logic: Queue Status', { 
+                                    console.log('Queue Counter Logic: Queue Status Update', { 
                                         queueRemaining,
+                                        lastQueueStatus: this.lastQueueStatus,
                                         currentRun: this.currentRun,
                                         totalRuns: this.totalRuns,
                                         isRunning: this.isRunning
                                     });
 
                                     if (this.isRunning) {
-                                        if (executionComplete) {
+                                        // Queue transition from having items to empty indicates completion
+                                        const runCompleted = this.lastQueueStatus > 0 && queueRemaining === 0;
+                                        
+                                        if (runCompleted) {
+                                            console.log('Queue Counter Logic: Run completed, preparing next run');
                                             this.ui.statusDisplay.textContent = `Run ${this.currentRun} completed`;
                                             
                                             if (this.currentRun < this.totalRuns) {
-                                                console.log('Queue Counter Logic: Queue completed, triggering next run');
-                                                setTimeout(() => this.triggerNextRun(), 100);
+                                                console.log('Queue Counter Logic: Triggering next run');
+                                                // Give a small delay before next run
+                                                setTimeout(() => {
+                                                    if (this.isRunning) {  // Double check we're still running
+                                                        this.triggerNextRun();
+                                                    }
+                                                }, 500);
                                             } else {
+                                                console.log('Queue Counter Logic: All runs completed');
                                                 this.stop(false);
                                             }
-                                        } else {
+                                        } else if (queueRemaining > 0) {
                                             this.ui.statusDisplay.textContent = `Run ${this.currentRun} in progress`;
                                         }
                                     }
@@ -83,7 +93,7 @@ app.registerExtension({
                                     this.lastQueueStatus = queueRemaining;
                                 }
                             } catch (e) {
-                                // Ignore parsing errors
+                                console.log('Queue Counter Logic: Error parsing message', e);
                             }
                         }
                     };
@@ -111,7 +121,12 @@ app.registerExtension({
                 }
 
                 triggerNextRun() {
-                    console.log("Queue Counter Logic: triggerNextRun method called");
+                    console.log("Queue Counter Logic: triggerNextRun method called", {
+                        currentRun: this.currentRun,
+                        totalRuns: this.totalRuns,
+                        isRunning: this.isRunning,
+                        wasInterrupted: this.wasInterrupted
+                    });
                     
                     if (this.wasInterrupted) {
                         console.log("Queue Counter Logic: Workflow was interrupted");
@@ -127,6 +142,11 @@ app.registerExtension({
 
                     this.currentRun++;
                     console.log(`Queue Counter Logic: Triggering run ${this.currentRun}/${this.totalRuns}`);
+                    
+                    // Reset queue status before new run
+                    this.lastQueueStatus = 0;
+                    
+                    // Queue the prompt
                     app.queuePrompt(0, 1);
                     this.updateUI();
                 }
