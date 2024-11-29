@@ -7,21 +7,6 @@ app.registerExtension({
     async setup(app) {
         console.log("Queue Counter UI: Setup Started");
 
-        // Add configuration settings
-        app.ui.settings.addSetting({
-            id: "klinter.queueCounter.enabled",
-            name: "Instant Queue Limiter Widget",
-            type: "boolean",
-            defaultValue: false,
-            onChange: (value) => {
-                // Update widget visibility based on settings
-                const container = document.getElementById('klinter-queue-counter');
-                if (container) {
-                    container.style.display = value ? 'flex' : 'none';
-                }
-            }
-        });
-
         // Create main container for queue counter
         const container = document.createElement('div');
         container.id = 'klinter-queue-counter';
@@ -49,8 +34,7 @@ app.registerExtension({
             top: -20px;
             left: 0;
             background-color: #353535;
-            color: white;
-            padding: 2px 5px;
+            padding: 2px 8px;
             border-radius: 3px 3px 0 0;
             font-size: 12px;
             border: 1px solid #505050;
@@ -64,33 +48,42 @@ app.registerExtension({
         const iterationInput = document.createElement('input');
         iterationInput.type = 'number';
         iterationInput.min = '1';
-        iterationInput.max = '100';
+        iterationInput.max = '255';
         iterationInput.value = '1';
-        iterationInput.style.width = '50px';
-        iterationInput.style.marginRight = '10px';
-        iterationInput.placeholder = 'Runs';
-
-        // Create button
-        const actionButton = document.createElement('button');
-        actionButton.textContent = 'Start';
-        actionButton.style.padding = '5px 10px';
-        actionButton.style.backgroundColor = 'white';
-        actionButton.style.color = 'black';
-        actionButton.style.border = 'none';
-        actionButton.style.borderRadius = '3px';
+        iterationInput.style.cssText = `
+            width: 60px;
+            background: #252525;
+            border: 1px solid #505050;
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+        `;
+        container.appendChild(iterationInput);
 
         // Create status display
         const statusDisplay = document.createElement('div');
-        statusDisplay.textContent = '';
-        statusDisplay.style.marginLeft = '10px';
-        statusDisplay.style.flex = '1';
-
-        // Append elements to container
-        container.appendChild(iterationInput);
-        container.appendChild(actionButton);
+        statusDisplay.textContent = 'Ready';
+        statusDisplay.style.cssText = `
+            flex-grow: 1;
+            text-align: center;
+            font-size: 14px;
+        `;
         container.appendChild(statusDisplay);
 
-        // Draggable functionality
+        // Create action button
+        const actionButton = document.createElement('button');
+        actionButton.textContent = 'Start';
+        actionButton.style.cssText = `
+            background: #454545;
+            border: 1px solid #505050;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        `;
+        container.appendChild(actionButton);
+
+        // Make container draggable
         let isDragging = false;
         let currentX;
         let currentY;
@@ -99,97 +92,88 @@ app.registerExtension({
         let xOffset = 0;
         let yOffset = 0;
 
-        // Prevent text selection during drag
-        titleElement.addEventListener('selectstart', (e) => e.preventDefault());
+        titleElement.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
 
-        // Attach event listeners for dragging
-        titleElement.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // Prevent default to stop text selection
+        function dragStart(e) {
             initialX = e.clientX - xOffset;
             initialY = e.clientY - yOffset;
-            isDragging = true;
-        });
 
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+            if (e.target === titleElement) {
+                isDragging = true;
+            }
+        }
 
-            e.preventDefault();
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
 
-            xOffset = currentX;
-            yOffset = currentY;
+                xOffset = currentX;
+                yOffset = currentY;
 
-            container.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-        });
+                setTranslate(currentX, currentY, container);
+            }
+        }
 
-        document.addEventListener('mouseup', () => {
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+
             isDragging = false;
-        });
+        }
 
-        // Function to add container to body
-        const addContainerToBody = () => {
-            if (document.body) {
-                document.body.appendChild(container);
-            } else {
-                setTimeout(addContainerToBody, 1000);
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        // Add container to document
+        document.body.appendChild(container);
+
+        // Hide container by default
+        container.style.display = 'none';
+
+        // Create UI object to expose
+        const ui = {
+            container,
+            iterationInput,
+            statusDisplay,
+            actionButton,
+            updateUI(isRunning, currentRun, totalRuns, wasInterrupted) {
+                if (isRunning) {
+                    actionButton.textContent = `Running (${currentRun}/${totalRuns})`;
+                    actionButton.style.backgroundColor = 'yellow';
+                    actionButton.style.color = 'black';
+                    statusDisplay.textContent = `Run ${currentRun} in progress`;
+                } else {
+                    actionButton.textContent = 'Start';
+                    actionButton.style.backgroundColor = wasInterrupted ? 'red' : '#454545';
+                    actionButton.style.color = wasInterrupted ? 'white' : 'white';
+                    statusDisplay.textContent = wasInterrupted 
+                        ? 'Workflow Interrupted' 
+                        : currentRun > 0 ? `Completed ${currentRun} runs` : 'Ready';
+                }
             }
         };
 
-        // Try to add container immediately
-        addContainerToBody();
-
-        // Multi-run logic
-        const logic = new window.QueueCounterLogic();
-
-        actionButton.addEventListener('click', () => {
-            // If currently running, stop the process
-            if (logic.isRunning) {
-                logic.cancelMultiRun();
-                actionButton.textContent = 'Start';
-                statusDisplay.textContent = 'Runs stopped.';
-                iterationInput.disabled = false;
-                return;
+        // Add configuration settings
+        app.ui.settings.addSetting({
+            id: "klinter.queueCounter.enabled",
+            name: "Instant Queue Limiter Widget",
+            type: "boolean",
+            defaultValue: true,
+            onChange: (value) => {
+                container.style.display = value ? 'flex' : 'none';
             }
-
-            // Start multi-run process
-            const runCount = parseInt(iterationInput.value, 10);
-            
-            if (runCount < 1 || runCount > 100) {
-                statusDisplay.textContent = 'Invalid run count. Must be between 1-100.';
-                return;
-            }
-
-            // Disable input during runs
-            iterationInput.disabled = true;
-
-            // Change button to Stop
-            actionButton.textContent = 'Stop';
-
-            statusDisplay.textContent = `Starting ${runCount} runs...`;
-
-            logic.startMultiRun(
-                runCount,
-                (currentRun, totalRuns) => {
-                    const remainingRuns = totalRuns - currentRun;
-                    statusDisplay.textContent = `Completed run ${currentRun}/${totalRuns} (${remainingRuns} left)`;
-                },
-                () => {
-                    // Runs completed
-                    statusDisplay.textContent = 'All runs completed!';
-                    actionButton.textContent = 'Start';
-                    iterationInput.disabled = false;
-                },
-                () => {
-                    // Runs stopped
-                    statusDisplay.textContent = 'Runs stopped.';
-                    actionButton.textContent = 'Start';
-                    iterationInput.disabled = false;
-                }
-            );
         });
 
-        console.log("Queue Counter UI: Setup Complete");
+        // Expose UI globally for logic component
+        window.queueCounterUI = ui;
+
+        console.log("Queue Counter UI: Setup Complete", ui);
     }
 });
 
