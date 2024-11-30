@@ -1,6 +1,7 @@
 """
 Node Value to String Node
 A node that converts node values to formatted strings with their node names.
+Accepts STRING, INT, and FLOAT inputs.
 """
 
 class NodeValue2String:
@@ -27,6 +28,9 @@ class NodeValue2String:
             if key in kwargs and kwargs[key] is not None:
                 # Get the value and its type
                 value = kwargs[key]
+                # Format float values with reasonable precision
+                if isinstance(value, float):
+                    value = "{:.4f}".format(value)
                 # Format using the template
                 try:
                     # Note: The actual node name will be handled by the JavaScript

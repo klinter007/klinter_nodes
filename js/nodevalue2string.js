@@ -31,7 +31,7 @@ app.registerExtension({
                 for (let i = 1; i <= target_inputs; i++) {
                     const inputName = `value_${i}`;
                     if (!this.inputs.find(input => input.name === inputName)) {
-                        this.addInput(inputName, ["STRING", "INT"]);
+                        this.addInput(inputName, ["STRING", "INT", "FLOAT"]);
                     }
                 }
             });
