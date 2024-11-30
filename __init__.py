@@ -11,12 +11,16 @@ from .size_selector import SizeSelector
 from .load_image_plus import LoadImagePlusKlinter
 from .aspect_selector import AspectSelector
 from .speed_ramp import SpeedRampNode
+from .string_contact_multi import StringContactMulti
+from .nodevalue2string import NodeValue2String
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
     # String manipulation nodes
     "concat": ConcatString,
     "filter": FilterString,
+    "string_contact_multi": StringContactMulti,
+    "nodevalue2string": NodeValue2String,
     
     # Core nodes
     "YellowBus": YellowBus,
@@ -36,6 +40,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # String manipulation nodes
     "concat": "Concat String - klinter",
     "filter": "Filter String - klinter",
+    "string_contact_multi": "String Contact Multi - klinter",
+    "nodevalue2string": "Node Value to String - klinter",
     
     # Core nodes
     "YellowBus": "Yellow Bus - klinter",
@@ -46,7 +52,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ExtraPadding": "Extra Padding for Zoom Out - klinter",
     "SizeSelector": "Size Selector - klinter",
     "LoadImagePlus": "Load Image Plus - klinter",
-    "AspectSelector": "Aspect Ratio Selector - klinter",
+    "AspectSelector": "Aspect Selector - klinter",
     "SpeedRamp": "Speed Ramp - klinter"
 }
 
@@ -60,5 +66,6 @@ WEB_DIRECTORY = "./js"
 WEB_EXTENSIONS = [
     "yellow_bus.js",
     "expandable_yellow_bus.js",
-    "queue_counter.js"  
+    "queue_counter.js",
+    "string_contact_multi.js"  # Add our new JS file
 ]
