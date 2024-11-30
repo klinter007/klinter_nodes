@@ -1,32 +1,15 @@
-# Instant Queue Limiter for ComfyUI
+# Klinter Nodes for ComfyUI
 
 ## Overview
-Instant Queue Limiter is a lightweight ComfyUI extension designed to help users run multiple workflow iterations efficiently while preventing RAM congestion and system overload.
+A collection of utility nodes for ComfyUI, including queue management and string manipulation tools.
 
 ## Key Features
-- Run multiple workflow iterations with a single click
-- Limit the number of concurrent runs (1-255)
-- Prevent RAM buildup by controlling queue size
-- Real-time run tracking and status updates
-- Draggable, non-intrusive widget interface
+- Queue management for efficient workflow execution
+- String manipulation and concatenation tools
+- Dynamic input handling
+- Memory-efficient processing
 
-## Use Cases
-- Batch image generation
-- Controlled workflow testing
-- Memory-efficient multi-run processing
-
-## How It Works
-The Instant Queue Limiter allows you to:
-1. Set the number of workflow runs
-2. Automatically queue and process workflows
-3. Track progress in real-time
-4. Stop before overwhelming system resources
-
-## Installation
-1. Place in ComfyUI's `custom_nodes` directory
-2. Restart ComfyUI
-
-## Widgets
+## Nodes
 
 ### Queue Counter
 A floating widget that lets you:
@@ -35,8 +18,19 @@ A floating widget that lets you:
 - Monitor current run progress
 - Track total runs completed
 
+### String Contact Multi
+A dynamic string concatenation node that allows:
+- Variable number of string inputs (2-1000)
+- Multiple separator options (comma, newline, pipe, space)
+- Easy input management with "Update inputs" button
+- Perfect for combining prompts or text elements
+
+## Installation
+1. Place in ComfyUI's `custom_nodes` directory
+2. Restart ComfyUI
+
 ## Configuration
-- Enable/Disable widget in ComfyUI Settings
+- Enable/Disable queue widget in ComfyUI Settings
 - Adjust run count directly in the widget
 - Widget can be dragged anywhere on the interface
 
@@ -44,6 +38,7 @@ A floating widget that lets you:
 - Prevent system slowdowns
 - Controlled batch processing
 - Easy workflow iteration
+- Flexible string manipulation
 
 ## License
 Open-source, free to use and modify
