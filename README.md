@@ -25,6 +25,20 @@ A dynamic string concatenation node that allows:
 - Easy input management with "Update inputs" button
 - Perfect for combining prompts or text elements
 
+### Node Value to String
+A node that converts node values into a formatted string, automatically using the connected nodes' names.
+- **Inputs**: Variable number of inputs (1-1000) supporting STRING, INT, and FLOAT types
+- **Features**:
+  - Automatically uses connected nodes' names in the output
+  - Formats float values to 4 decimal places
+  - Outputs each value on a new line in "name:value" format
+- **Example Output**:
+  ```
+  KSampler:20
+  CLIPTextEncode:your prompt here
+  VAEDecode:0.7500
+  ```
+
 ## Installation
 1. Place in ComfyUI's `custom_nodes` directory
 2. Restart ComfyUI

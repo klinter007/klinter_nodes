@@ -15,8 +15,10 @@ class NodeValue2String:
         return {
             "required": {
                 "inputcount": ("INT", {"default": 2, "min": 1, "max": 1000, "step": 1}),
-                "template": ("STRING", {"default": "{name}:{value}"})
             },
+            "hidden": {
+                "template": ("STRING", {"default": "{name}:{value}"})
+            }
         }
     
     RETURN_TYPES = ("STRING",)
