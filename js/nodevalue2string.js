@@ -45,58 +45,29 @@ app.registerExtension({
             }, 100);
         };
 
-        // Function to get node display name
-        function getNodeDisplayName(node) {
-            // First try to get the title (user-set name)
-            if (node.title && node.title !== node.type) {
-                return node.title;
-            }
-            
-            // Then try to get the display name from NODE_DISPLAY_NAME_MAPPINGS
-            const displayName = app.graph._nodes_by_id[node.id]?.displayName;
-            if (displayName) {
-                return displayName;
-            }
-            
-            // Finally fallback to node type
-            return node.type;
-        }
-
-        // Override the original getExtraMenuOptions
-        const orig_getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
-        nodeType.prototype.getExtraMenuOptions = function(_, options) {
-            if (orig_getExtraMenuOptions) {
-                orig_getExtraMenuOptions.apply(this, arguments);
+        // Override the connection handling
+        const orig_onConnectionsChange = nodeType.prototype.onConnectionsChange;
+        nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
+            if (orig_onConnectionsChange) {
+                orig_onConnectionsChange.apply(this, arguments);
             }
 
-            // Add a menu option to update the template with connected node names
-            options.unshift({
-                content: "Update with node names",
-                callback: () => {
-                    // Get the template widget
-                    const templateWidget = this.widgets.find(w => w.name === "template");
-                    if (!templateWidget) return;
-
-                    // For each input, get the connected node's name
-                    this.inputs.forEach((input, idx) => {
-                        if (input.link !== null) {
-                            const link = app.graph.links[input.link];
-                            if (link) {
-                                const sourceNode = app.graph.getNodeById(link.origin_id);
-                                if (sourceNode) {
-                                    // Replace the placeholder with actual node name
-                                    const placeholder = `{node_${idx + 1}}`;
-                                    const nodeName = getNodeDisplayName(sourceNode);
-                                    templateWidget.value = templateWidget.value.replace(
-                                        placeholder,
-                                        nodeName
-                                    );
-                                }
-                            }
-                        }
-                    });
+            if (type === LiteGraph.INPUT && connected && link_info) {
+                const input = this.inputs[index];
+                if (input && input.name.startsWith("value_")) {
+                    const sourceNode = app.graph.getNodeById(link_info.origin_id);
+                    if (sourceNode) {
+                        // Get the node's title or type
+                        const nodeName = sourceNode.title || sourceNode.type;
+                        
+                        // Rename the input to match the connected node
+                        input.name = nodeName;
+                        
+                        // Force a graph change to update the UI
+                        app.graph.setDirtyCanvas(true);
+                    }
                 }
-            });
+            }
         };
     }
 });

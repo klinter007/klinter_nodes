@@ -7,6 +7,9 @@ Accepts STRING, INT, and FLOAT inputs.
 class NodeValue2String:
     """A node that formats input values with their source node names."""
     
+    def __init__(self):
+        pass
+
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -19,23 +22,23 @@ class NodeValue2String:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "format_node_values"
     CATEGORY = "string"
-    
+
     def format_node_values(self, inputcount, template, **kwargs):
         # Collect and format all connected values
         formatted_strings = []
-        for i in range(1, inputcount + 1):
-            key = f"value_{i}"
-            if key in kwargs and kwargs[key] is not None:
-                # Get the value and its type
-                value = kwargs[key]
+        
+        # Get all kwargs that aren't our control parameters
+        value_inputs = {k: v for k, v in kwargs.items() if k not in ["inputcount", "template"]}
+        
+        # Format each connected value
+        for input_name, value in value_inputs.items():
+            if value is not None:
                 # Format float values with reasonable precision
                 if isinstance(value, float):
                     value = "{:.4f}".format(value)
                 # Format using the template
                 try:
-                    # Note: The actual node name will be handled by the JavaScript
-                    # Here we use a placeholder that JS will replace
-                    formatted = template.format(name=f"{{node_{i}}}", value=value)
+                    formatted = template.format(name=input_name, value=value)
                     formatted_strings.append(formatted)
                 except Exception as e:
                     formatted_strings.append(f"Error:{str(e)}")
