@@ -45,6 +45,23 @@ app.registerExtension({
             }, 100);
         };
 
+        // Function to get node display name
+        function getNodeDisplayName(node) {
+            // First try to get the title (user-set name)
+            if (node.title && node.title !== node.type) {
+                return node.title;
+            }
+            
+            // Then try to get the display name from NODE_DISPLAY_NAME_MAPPINGS
+            const displayName = app.graph._nodes_by_id[node.id]?.displayName;
+            if (displayName) {
+                return displayName;
+            }
+            
+            // Finally fallback to node type
+            return node.type;
+        }
+
         // Override the original getExtraMenuOptions
         const orig_getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
         nodeType.prototype.getExtraMenuOptions = function(_, options) {
@@ -69,9 +86,10 @@ app.registerExtension({
                                 if (sourceNode) {
                                     // Replace the placeholder with actual node name
                                     const placeholder = `{node_${idx + 1}}`;
+                                    const nodeName = getNodeDisplayName(sourceNode);
                                     templateWidget.value = templateWidget.value.replace(
                                         placeholder,
-                                        sourceNode.title || sourceNode.type
+                                        nodeName
                                     );
                                 }
                             }
