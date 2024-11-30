@@ -1,0 +1,101 @@
+"""
+Node Value to String Node
+A node that converts node values to formatted strings with their node names.
+Accepts STRING, INT, and FLOAT inputs.
+"""
+
+class NodeValue2String:
+    """A node that formats input values with their source node names."""
+    
+    TEMPLATE = "{name}:{value}"
+    
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "inputcount": ("INT", {"default": 2, "min": 1, "max": 1000, "step": 1}),
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "format_node_values"
+    CATEGORY = "string"
+
+    def __init__(self):
+        # Initialize display names dictionary
+        self.display_names = {}
+
+    def format_node_values(self, inputcount, **kwargs):
+        # Debug print all inputs
+        print("\n" + "="*50)
+        print("DEBUG: Node Value to String - Input Processing")
+        print("="*50)
+        print(f"DEBUG: All inputs received: {kwargs}")
+        print(f"DEBUG: Input count: {inputcount}")
+        print(f"DEBUG: Stored display names: {self.display_names}")
+        
+        # Collect and format all connected values
+        formatted_strings = []
+        
+        # Process inputs in order from value_1 to value_N
+        for i in range(1, inputcount + 1):
+            key = f"value_{i}"
+            
+            if key in kwargs:
+                value = kwargs[key]
+                
+                if value is not None:
+                    # Format float values with reasonable precision
+                    if isinstance(value, float):
+                        value = "{:.4f}".format(value)
+                    
+                    # Use display name or fallback to key
+                    display_name = self.display_names.get(key, key)
+                    
+                    # Format using the template
+                    try:
+                        formatted = self.TEMPLATE.format(name=display_name, value=value)
+                        formatted_strings.append(formatted)
+                        print(f"DEBUG: Added formatted string: {formatted}")
+                    except Exception as e:
+                        error_msg = f"Error:{str(e)}"
+                        formatted_strings.append(error_msg)
+                        print(f"DEBUG: Error formatting input: {error_msg}")
+        
+        # Join all formatted strings with newline
+        result = "\n".join(formatted_strings)
+        print(f"DEBUG: Final result: {result}")
+        print("="*50 + "\n")
+        
+        return (result,)
+
+    def load_display_names(self, node_data):
+        """
+        Attempt to load display names from node serialization data.
+        """
+        print("\n" + "="*50)
+        print("DEBUG: Loading Display Names")
+        print("="*50)
+        print(f"DEBUG: Received node data: {node_data}")
+        
+        # Try to extract display names
+        if 'displayNames' in node_data:
+            self.display_names = {
+                input_name: data.get('nodeName', input_name) 
+                for input_name, data in node_data['displayNames'].items()
+            }
+        
+        print(f"DEBUG: Loaded display names: {self.display_names}")
+        print("="*50 + "\n")
+
+# Register the node
+NODE_CLASS_MAPPINGS = {
+    "nodevalue2string": NodeValue2String
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "nodevalue2string": "Node Value to String"
+}
+
+# Export the class
+__all__ = ['NodeValue2String']

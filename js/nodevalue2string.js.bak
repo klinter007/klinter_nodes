@@ -1,0 +1,105 @@
+import { app } from "../../../scripts/app.js";
+
+app.registerExtension({
+    name: "KlinterNodes.nodevalue2string",
+    async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        if (nodeData.name !== "nodevalue2string") {
+            return;
+        }
+
+        const orig_onNodeCreated = nodeType.prototype.onNodeCreated;
+        nodeType.prototype.onNodeCreated = function() {
+            if (orig_onNodeCreated) {
+                orig_onNodeCreated.apply(this, arguments);
+            }
+
+            // Add update button
+            this.addWidget("button", "Update inputs", null, () => {
+                const target_inputs = this.widgets.find(w => w.name === "inputcount")?.value || 2;
+                const current_input_count = this.inputs.length;
+                
+                // Calculate how many new inputs we need
+                const inputs_to_add = target_inputs - current_input_count;
+                
+                if (inputs_to_add > 0) {
+                    // Add new inputs
+                    for (let i = 0; i < inputs_to_add; i++) {
+                        const inputName = `value_${current_input_count + i + 1}`;
+                        this.addInput(inputName, ["STRING", "INT", "FLOAT"]);
+                        
+                        // Add a widget to display the input's source name
+                        this.addWidget("text", `input_name_${inputName}`, "Not Connected", null, {
+                            readonly: true
+                        });
+                    }
+                } else if (inputs_to_add < 0) {
+                    // Remove excess inputs from the end
+                    for (let i = 0; i < -inputs_to_add; i++) {
+                        this.removeInput(this.inputs.length - 1);
+                        // Remove corresponding name widget
+                        const widget = this.widgets.find(w => w.name === `input_name_value_${this.inputs.length + 1}`);
+                        if (widget) {
+                            this.widgets.splice(this.widgets.indexOf(widget), 1);
+                        }
+                    }
+                }
+            });
+
+            // Initial setup
+            setTimeout(() => {
+                const widget = this.widgets.find(w => w.name === "Update inputs");
+                if (widget) {
+                    widget.callback();
+                }
+            }, 100);
+        };
+
+        // Override connections change to update input names
+        const orig_onConnectionsChange = nodeType.prototype.onConnectionsChange;
+        nodeType.prototype.onConnectionsChange = function(type, index, connected, link_info) {
+            if (orig_onConnectionsChange) {
+                orig_onConnectionsChange.apply(this, arguments);
+            }
+
+            // Focus on input connections
+            if (type === LiteGraph.INPUT && connected && link_info) {
+                const sourceNode = app.graph.getNodeById(link_info.origin_id);
+                
+                if (sourceNode) {
+                    // Get the input 
+                    const input = this.inputs[index];
+                    
+                    // Prefer title, fallback to type
+                    const nodeName = sourceNode.title || sourceNode.type || `Node_${sourceNode.id}`;
+                    
+                    // Change the input name
+                    input.name = nodeName;
+                }
+            } else if (type === LiteGraph.INPUT && !connected) {
+                // Reset input name when disconnected
+                const input = this.inputs[index];
+                input.name = `value_${index + 1}`;
+            }
+        };
+
+        // Override serialize to store display names
+        const orig_serialize = nodeType.prototype.serialize;
+        nodeType.prototype.serialize = function() {
+            const data = orig_serialize ? orig_serialize.apply(this, arguments) : {};
+            
+            // Store display names directly in node properties
+            data.displayNames = {};
+            this.inputs.forEach((input, index) => {
+                const nameWidget = this.widgets.find(w => w.name === `input_name_${input.name}`);
+                if (nameWidget && nameWidget.value !== "Not Connected") {
+                    data.displayNames[input.name] = {
+                        inputName: input.name,
+                        nodeName: nameWidget.value
+                    };
+                }
+            });
+            
+            return data;
+        };
+    }
+});
