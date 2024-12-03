@@ -1,11 +1,12 @@
 # Klinter Nodes for ComfyUI
 
 ## Overview
-A collection of utility nodes for ComfyUI, including queue management and string manipulation tools.
+A collection of utility nodes for ComfyUI, including queue management, string manipulation, and node value conversion tools.
 
 ## Key Features
 - Queue management for efficient workflow execution
 - String manipulation and concatenation tools
+- Node value to string conversion
 - Dynamic input handling
 - Memory-efficient processing
 
@@ -25,6 +26,21 @@ A dynamic string concatenation node that allows:
 - Easy input management with "Update inputs" button
 - Perfect for combining prompts or text elements
 
+### Node Value to String Multi
+A versatile node for converting multiple node values to formatted strings:
+- Dynamic input count (2-1000 inputs)
+- Automatically detects and displays connected node names
+- Supports various input types (STRING, INT, FLOAT)
+- Formats values with their source node names
+- Useful for logging, debugging, and workflow tracking
+
+### Node Value to String
+A simple, single-input version of the node value to string conversion:
+- Takes one input of any type
+- Converts input to a formatted string
+- Displays the source node's name
+- Ideal for quick value inspection or simple logging
+
 ## Installation
 1. Place in ComfyUI's `custom_nodes` directory
 2. Restart ComfyUI
@@ -39,6 +55,7 @@ A dynamic string concatenation node that allows:
 - Controlled batch processing
 - Easy workflow iteration
 - Flexible string manipulation
+- Advanced node value tracking
 
 ## License
 Open-source, free to use and modify
