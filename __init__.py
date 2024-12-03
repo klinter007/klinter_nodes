@@ -12,8 +12,7 @@ from .load_image_plus import LoadImagePlusKlinter
 from .aspect_selector import AspectSelector
 from .speed_ramp import SpeedRampNode
 from .string_contact_multi import StringContactMulti
-from .nodevalue2string import NodeValue2StringMulti
-from .nodevalue2string_single import NodeValue2String
+from .node_value_to_string import NodeValue2StringMulti, NodeValue2String
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {

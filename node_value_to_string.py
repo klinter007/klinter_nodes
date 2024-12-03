@@ -1,24 +1,12 @@
 """
-Node Value to String Multi Node
-A node that converts multiple node values to formatted strings with their node names.
-Accepts STRING, INT, and FLOAT inputs.
+Node Value to String Nodes
+Provides both multi-input and single-input nodes for converting node values to formatted strings.
 """
 
-class NodeValue2StringMulti:
-    """A node that formats multiple input values with their source node names."""
+class NodeValue2StringBase:
+    """Base class for node value to string conversion."""
     
     TEMPLATE = "{name}:{value}"
-    
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "inputcount": ("INT", {"default": 2, "min": 1, "max": 1000, "step": 1}),
-            }
-        }
-    
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "format_node_values"
     CATEGORY = "string"
     OUTPUT_NODE = True
 
@@ -72,6 +60,21 @@ class NodeValue2StringMulti:
         else:
             return str(value)
 
+
+class NodeValue2StringMulti(NodeValue2StringBase):
+    """A node that formats multiple input values with their source node names."""
+    
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "inputcount": ("INT", {"default": 2, "min": 1, "max": 1000, "step": 1}),
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "format_node_values"
+
     def format_node_values(self, inputcount, **kwargs):
         """
         Format node values with their source node names.
@@ -110,14 +113,55 @@ class NodeValue2StringMulti:
         result = "\n".join(formatted_strings)
         return (result,)
 
-# Register the node
+
+class NodeValue2String(NodeValue2StringBase):
+    """A node that formats a single input value with its source node name."""
+    
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "value": ("*",),
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "format_node_value"
+
+    def format_node_value(self, value):
+        """
+        Format a single node value with its source node name.
+        
+        Args:
+            value: Input value to format
+        
+        Returns:
+            tuple: Formatted string result
+        """
+        # Get node title for the input
+        node_title = self.get_node_title(value)
+        
+        # Format the value
+        formatted_value = self.get_node_value(value)
+        
+        # Create formatted string
+        try:
+            result = self.TEMPLATE.format(name=node_title, value=formatted_value)
+            return (result,)
+        except Exception as e:
+            return (f"Error formatting input: {str(e)}",)
+
+
+# Register the nodes
 NODE_CLASS_MAPPINGS = {
-    "nodevalue2stringmulti": NodeValue2StringMulti
+    "nodevalue2stringmulti": NodeValue2StringMulti,
+    "nodevalue2string": NodeValue2String
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "nodevalue2stringmulti": "Node Value to String Multi - klinter"
+    "nodevalue2stringmulti": "Node Value to String Multi - klinter",
+    "nodevalue2string": "Node Value to String - klinter"
 }
 
-# Export the class
-__all__ = ['NodeValue2StringMulti']
+# Export the classes
+__all__ = ['NodeValue2StringMulti', 'NodeValue2String']
