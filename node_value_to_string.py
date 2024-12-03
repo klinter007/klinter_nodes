@@ -114,54 +114,14 @@ class NodeValue2StringMulti(NodeValue2StringBase):
         return (result,)
 
 
-class NodeValue2String(NodeValue2StringBase):
-    """A node that formats a single input value with its source node name."""
-    
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "value": ("*",),
-            }
-        }
-    
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "format_node_value"
-
-    def format_node_value(self, value):
-        """
-        Format a single node value with its source node name.
-        
-        Args:
-            value: Input value to format
-        
-        Returns:
-            tuple: Formatted string result
-        """
-        # Get node title for the input
-        node_title = self.get_node_title(value)
-        
-        # Format the value
-        formatted_value = self.get_node_value(value)
-        
-        # Create formatted string
-        try:
-            result = self.TEMPLATE.format(name=node_title, value=formatted_value)
-            return (result,)
-        except Exception as e:
-            return (f"Error formatting input: {str(e)}",)
-
-
 # Register the nodes
 NODE_CLASS_MAPPINGS = {
-    "nodevalue2stringmulti": NodeValue2StringMulti,
-    "nodevalue2string": NodeValue2String
+    "nodevalue2stringmulti": NodeValue2StringMulti
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "nodevalue2stringmulti": "Node Value to String Multi - klinter",
-    "nodevalue2string": "Node Value to String - klinter"
+    "nodevalue2stringmulti": "Node Value to String Multi - klinter"
 }
 
 # Export the classes
-__all__ = ['NodeValue2StringMulti', 'NodeValue2String']
+__all__ = ['NodeValue2StringMulti']

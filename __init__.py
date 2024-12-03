@@ -12,7 +12,7 @@ from .load_image_plus import LoadImagePlusKlinter
 from .aspect_selector import AspectSelector
 from .speed_ramp import SpeedRampNode
 from .string_contact_multi import StringContactMulti
-from .node_value_to_string import NodeValue2StringMulti, NodeValue2String
+from .node_value_to_string import NodeValue2StringMulti
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -21,7 +21,6 @@ NODE_CLASS_MAPPINGS = {
     "filter": FilterString,
     "string_contact_multi": StringContactMulti,
     "nodevalue2stringmulti": NodeValue2StringMulti,
-    "nodevalue2string": NodeValue2String,
     
     # Core nodes
     "YellowBus": YellowBus,
@@ -43,7 +42,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "filter": "Filter String - klinter",
     "string_contact_multi": "String Contact Multi - klinter",
     "nodevalue2stringmulti": "Node Value to String Multi - klinter",
-    "nodevalue2string": "Node Value to String - klinter",
     
     # Core nodes
     "YellowBus": "Yellow Bus - klinter",

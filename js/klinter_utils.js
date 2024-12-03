@@ -37,7 +37,7 @@ const KlinterUtils = {
      */
     updateInputLabel: function(node, index, connected, linkInfo) {
         if (connected && linkInfo) {
-            const sourceNode = app.graph.getNodeById(linkInfo.origin_id);
+            const sourceNode = (typeof app !== 'undefined' && app.graph) ? app.graph.getNodeById(linkInfo.origin_id) : null;
             
             if (sourceNode) {
                 // Prefer title, fallback to type
