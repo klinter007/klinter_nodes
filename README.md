@@ -1,66 +1,69 @@
 # Klinter Nodes for ComfyUI
 
-## Overview
-A collection of utility nodes for ComfyUI, including queue management, string manipulation, and node value conversion tools.
+Welcome to the Klinter Nodes repository! This collection of custom nodes is designed to enhance your experience with ComfyUI, providing flexible and powerful tools for image processing and manipulation.
 
-## Key Features
-- Queue management for efficient workflow execution
-- String manipulation and concatenation tools
-- Node value to string conversion
-- Dynamic input handling
-- Memory-efficient processing
+## Social Media Links
+- [Twitter/X](https://x.com/GiliBenShahar)
+- [Instagram](https://www.instagram.com/gilibenshahar/)
+- [Civitai](https://civitai.com/user/klinter)
 
-## Nodes
+## Categories
+- Image Processing
+- Masking
+- Outpainting
+- Upscaling
 
-### Queue Counter
-A floating widget that lets you:
-- Set number of runs (1-255)
-- Start/Stop batch processing
-- Monitor current run progress
-- Track total runs completed
+## Index of Nodes
+1. [Outpaint Padding - Klinter](#outpaint-padding---klinter)
+2. [Aspect Selector](#aspect-selector)
+3. [Concatenate String](#concatenate-string)
+4. [Filter String](#filter-string)
+5. [Folder Loader](#folder-loader)
+6. [Load Image Plus](#load-image-plus)
+7. [Node Value to String](#node-value-to-string)
+8. [Size Selector](#size-selector)
+9. [Speed Ramp](#speed-ramp)
+10. [String Contact Multi](#string-contact-multi)
+11. [Yellow Bus](#yellow-bus)
+12. [Zoom Out Composer](#zoom-out-composer)
 
-### String Contact Multi
-A dynamic string concatenation node that allows:
-- Variable number of string inputs (2-1000)
-- Multiple separator options (comma, newline, pipe, space)
-- Easy input management with "Update inputs" button
-- Perfect for combining prompts or text elements
+## Node Descriptions
 
-### Node Value to String Multi
-A versatile node for converting multiple node values to formatted strings:
-- Dynamic input count (2-1000 inputs)
-- Automatically detects and displays connected node names
-- Supports various input types (STRING, INT, FLOAT)
-- Formats values with their source node names
-- Useful for logging, debugging, and workflow tracking
+### Outpaint Padding - Klinter
+- **Purpose**: Adds padding around images specifically for outpainting purposes.
+
+### Aspect Selector
+- **Purpose**: Allows users to select and manipulate image aspects.
+
+### Concatenate String
+- **Purpose**: Concatenates multiple strings into one.
+
+### Filter String
+- **Purpose**: Filters strings based on specific criteria.
+
+### Folder Loader
+- **Purpose**: Loads images from specified folders.
+
+### Load Image Plus
+- **Purpose**: Enhances the image loading capabilities within the UI.
 
 ### Node Value to String
-A simple, single-input version of the node value to string conversion:
-- Takes one input of any type
-- Converts input to a formatted string
-- Displays the source node's name
-- Ideal for quick value inspection or simple logging
+- **Purpose**: Converts node values to string format.
 
-## Installation
-1. Place in ComfyUI's `custom_nodes` directory
-2. Restart ComfyUI
+### Size Selector
+- **Purpose**: Lets users define the size of images or elements.
 
-## Configuration
-- Enable/Disable queue widget in ComfyUI Settings
-- Adjust run count directly in the widget
-- Widget can be dragged anywhere on the interface
+### Speed Ramp
+- **Purpose**: Adjusts the speed of animations or transitions.
 
-## Benefits
-- Prevent system slowdowns
-- Controlled batch processing
-- Easy workflow iteration
-- Flexible string manipulation
-- Advanced node value tracking
+### String Contact Multi
+- **Purpose**: Handles multiple string contacts.
 
-## License
-Open-source, free to use and modify
+### Yellow Bus
+- **Purpose**: Specific functionality related to the yellow bus node.
 
-## Connect with Me
-- Twitter: [@klinter_tech](https://twitter.com/klinter_tech)
-- Instagram: [@klinter.ai](https://instagram.com/klinter.ai)
-- GitHub: [klinter](https://github.com/klinter)
+### Zoom Out Composer
+- **Purpose**: Composes images for zooming out effects.
+
+## Contribution
+Feel free to contribute to this repository by suggesting new nodes or improvements to existing ones. Your feedback and contributions are always welcome!

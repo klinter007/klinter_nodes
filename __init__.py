@@ -6,13 +6,13 @@ from .filter_string import FilterString
 from .yellow_bus import YellowBus
 from .zoom_out_composer import ZoomOutComposer
 from .folder_loader import FolderLoader
-from .extra_padding import ExtraPadding
 from .size_selector import SizeSelector
 from .load_image_plus import LoadImagePlusKlinter
 from .aspect_selector import AspectSelector
 from .speed_ramp import SpeedRampNode
 from .string_contact_multi import StringContactMulti
 from .node_value_to_string import NodeValue2StringMulti
+from .outpaint_padding import OutpaintPadding
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -28,11 +28,11 @@ NODE_CLASS_MAPPINGS = {
     # Image processing nodes
     "ZoomOutComposer": ZoomOutComposer,
     "FolderLoader": FolderLoader,
-    "ExtraPadding": ExtraPadding,
     "SizeSelector": SizeSelector,
     "LoadImagePlus": LoadImagePlusKlinter,
     "AspectSelector": AspectSelector,
-    "SpeedRamp": SpeedRampNode
+    "SpeedRamp": SpeedRampNode,
+    "OutpaintPadding": OutpaintPadding
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -49,11 +49,11 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # Image processing nodes
     "ZoomOutComposer": "Zoom Out Composer - klinter",
     "FolderLoader": "Folder Loader - klinter",
-    "ExtraPadding": "Extra Padding - klinter",
     "SizeSelector": "Size Selector - klinter",
     "LoadImagePlus": "Load Image Plus - klinter",
     "AspectSelector": "Aspect Selector - klinter",
-    "SpeedRamp": "Speed Ramp - klinter"
+    "SpeedRamp": "Speed Ramp - klinter",
+    "OutpaintPadding": "Outpaint Padding - Klinter"
 }
 
 # Define what symbols this module exports
