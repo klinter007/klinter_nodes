@@ -22,8 +22,8 @@ app.registerExtension({
                     } else {
                         // Add new inputs and outputs
                         for(let i = this.inputs.length; i < target_pairs; i++) {
-                            this.addInput(`input_${i+1}`, "empty");
-                            this.addOutput(`out_${i+1}`, "*");
+                            this.addInput(`input_${i+1}`, "*");  // Use wildcard type
+                            this.addOutput(`out_${i+1}`, "*");   // Use wildcard type
                         }
                     }
                 });
@@ -37,7 +37,7 @@ app.registerExtension({
                 }, 100);
             }
 
-            // Force a node refresh
+            // Force a node refresh with proper type updates
             function refreshNode(node) {
                 // Trigger multiple refresh methods
                 if (node.graph) {
@@ -66,7 +66,11 @@ app.registerExtension({
                 // Handle disconnection
                 if (!connected || !link_info) {
                     if (this.inputs?.[index]) {
-                        this.inputs[index].type = "empty";
+                        this.inputs[index].type = "*";  // Reset to wildcard type
+                        this.inputs[index].name = `input_${index + 1}`;  // Reset name
+                        if (this.outputs?.[index]) {
+                            this.outputs[index].name = `out_${index + 1}`;  // Reset output name
+                        }
                     }
                     refreshNode(this);
                     return;
@@ -77,9 +81,17 @@ app.registerExtension({
                 const otherOutput = otherNode?.outputs?.[link_info.origin_slot];
                 if (!otherOutput?.type) return;
                 
-                // Update input to match connected type
+                // Update input type and display
                 if (this.inputs?.[index]) {
-                    this.inputs[index].type = otherOutput.type;
+                    const type = otherOutput.type;
+                    this.inputs[index].type = type;
+                    this.inputs[index].name = `input_${index + 1} (${type})`;
+                    
+                    // Update corresponding output
+                    if (this.outputs?.[index]) {
+                        this.outputs[index].type = type;  // Match input type
+                        this.outputs[index].name = `out_${index + 1} (${type})`;
+                    }
                 }
 
                 // Force refresh display

@@ -29,7 +29,7 @@ class YellowBus:
         }
     
     RETURN_TYPES = tuple([any] * 10)  # Support up to 10 outputs
-    RETURN_NAMES = tuple([f"out_{i}" for i in range(1, 11)])  # Named outputs for clarity
+    RETURN_NAMES = tuple([f"out_{i}" for i in range(1, 11)])  # Names updated by JS
     FUNCTION = "route"
     CATEGORY = "klinter"
     NODE_COLOR = "#FFFF00"  # Yellow color
@@ -44,11 +44,16 @@ class YellowBus:
         Each input maps to its corresponding output with the same type.
         If an input is not connected, its corresponding output will be None.
         """
-        # Convert kwargs to list, preserving order
+        # Convert kwargs to list, preserving order and types
         values = []
         for i in range(1, pairs + 1):
             key = f"input_{i}"
-            values.append(kwargs.get(key, None))
+            value = kwargs.get(key, None)
+            # Store the type information for the UI
+            if value is not None:
+                value_type = type(value).__name__
+            values.append(value)
+            
         # Fill remaining outputs with None
         while len(values) < 10:
             values.append(None)
