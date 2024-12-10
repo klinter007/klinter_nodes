@@ -7,20 +7,27 @@ class AspectSelector:
     # Base ratios and their relative proportions (using 1536 as reference)
     BASE_RATIOS = {
         "1:1": (1.0, 1.0),
-        "3:4": (0.875, 1.125),  # 1344/1536, 1728/1536
-        "5:8": (0.8125, 1.1875),  # 1248/1536, 1824/1536
-        "9:16": (0.75, 1.3125),  # 1152/1536, 2016/1536
-        "9:21": (0.625, 1.5),  # 960/1536, 2304/1536
-        "4:3": (1.125, 0.875),  # 1728/1536, 1344/1536
-        "3:2": (1.1875, 0.8125),  # 1824/1536, 1248/1536
-        "16:9": (1.3125, 0.75),  # 2016/1536, 1152/1536
-        "21:9": (1.5, 0.625)  # 2304/1536, 960/1536
+        "---": "---",
+        "3:2": (1.5, 0.6667),
+        "5:4": (1.25, 0.8),
+        "8:5": (1.1875, 0.8125),
+        "16:9": (1.3125, 0.75),
+        "21:9": (1.5, 0.625),
+        "---": "---",
+        "2:3": (0.6667, 1.5),
+        "4:5": (0.8, 1.25),
+        "5:8": (0.8125, 1.1875),
+        "9:16": (0.75, 1.3125),
+        "9:21": (0.625, 1.5),
     }
 
     BASE_SIZES = {
         "512": 512,
         "768": 768,
         "1024": 1024,
+        "1152": 1152,
+        "1280": 1280,
+        "1408": 1408,
         "1536": 1536
     }
     
@@ -48,13 +55,13 @@ class AspectSelector:
     CATEGORY = "klinter"
     OUTPUT_NODE = True
 
-    HELP = "Select base resolution (512/768/1024/1536) and aspect ratio.\nUse seed control for random aspect ratio selection.\nOutputs optimal dimensions while maintaining selected base resolution."
+    HELP = "Select base resolution (512/768/1024/1152/1280/1408/1536) and aspect ratio.\nUse seed control for random aspect ratio selection.\nOutputs optimal dimensions while maintaining selected base resolution."
 
     def return_res(self, base_resolution, aspect_ratio, seed):
         # If seed is not 0, use it to randomly select an aspect ratio only
         if seed != 0:
             random.seed(seed)
-            aspect_ratio = random.choice(list(self.BASE_RATIOS.keys()))
+            aspect_ratio = random.choice([ratio for ratio in self.BASE_RATIOS.keys() if ratio != "---"])
         
         # Calculate dimensions based on selected base resolution and ratio
         selected_info = self.get_dimensions(base_resolution, aspect_ratio)
