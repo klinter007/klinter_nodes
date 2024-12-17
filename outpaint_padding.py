@@ -23,6 +23,9 @@ class OutpaintPadding:
                     "step": 1,
                 }),
                 "upscale_method": (s.upscale_methods,),
+            },
+            "optional": {
+                "mask": ("MASK",),
             }
         }
 
@@ -32,7 +35,12 @@ class OutpaintPadding:
     CATEGORY = "klinter"
     NODE_COLOR = "#32CD32"  # Lime Green
 
-    def expand_image(self, image, zoom_factor, mask_feather, upscale_method):
+    def expand_image(self, image, zoom_factor, mask_feather, upscale_method, mask=None):
+        # Handle input mask if provided
+        if mask is not None:
+            if torch.allclose(mask, torch.zeros_like(mask)):
+                mask = None
+
         zoom = float(zoom_factor.replace('x', ''))
         B, H, W, C = image.shape
         new_width = int(W * zoom)
@@ -41,39 +49,51 @@ class OutpaintPadding:
         pad_x = (new_width - W) // 2
         pad_y = (new_height - H) // 2
 
+        # Initialize padded image with mid-gray
         padded_image = torch.ones((B, new_height, new_width, C), dtype=torch.float32) * 0.5
         padded_image[:, pad_y:pad_y+H, pad_x:pad_x+W, :] = image
 
-        if mask_feather > 0 and mask_feather * 2 < H and mask_feather * 2 < W:
-            mask = torch.zeros((B, new_height, new_width), dtype=torch.float32)  # Initialize mask to zeros
-            t = torch.ones_like(mask)  # Initialize t to ones
-            t[:, pad_y:pad_y+H, pad_x:pad_x+W] = 0.0  # Set the area of the original image to 0.0
-            
-            if mask_feather > 0:
-                # Create 1D Gaussian kernel
-                kernel_size = mask_feather * 2 + 1
-                sigma = mask_feather / 2
-                kernel_1d = torch.exp(-torch.arange(-(kernel_size // 2), kernel_size // 2 + 1).float().pow(2) / (2 * sigma ** 2))
-                kernel_1d = kernel_1d / kernel_1d.sum()
-                
-                # Create 2D kernel by outer product
-                kernel_2d = torch.outer(kernel_1d, kernel_1d)
-                kernel_2d = kernel_2d.view(1, 1, kernel_size, kernel_size).to(image.device)
-                
-                # Apply padding
-                pad_size = mask_feather
-                t = F.pad(t, (pad_size, pad_size, pad_size, pad_size), mode='reflect')
-                
-                # Apply convolution for blurring
-                t = F.conv2d(t.unsqueeze(1), kernel_2d, padding=0)
-                t = t.squeeze(1)
-                
-            mask = t  # Use the inverted mask
+        if mask is not None:
+            # If mask provided, pad it to fit new size
+            mask = F.pad(mask, (pad_x, pad_x, pad_y, pad_y), mode='constant', value=0)
+            mask = 1 - mask  # Invert the mask
+            t = torch.zeros_like(mask)
         else:
-            mask = torch.zeros((B, new_height, new_width), dtype=torch.float32)
-            mask[:, pad_y:pad_y+H, pad_x:pad_x+W] = 1.0
+            # Create new mask
+            new_mask = torch.ones((B, new_height, new_width), dtype=torch.float32)
+            t = torch.zeros((B, H, W), dtype=torch.float32)
+            
+        # Apply feathering if specified
+        if mask_feather > 0 and mask_feather * 2 < H and mask_feather * 2 < W:
+            for i in range(H):
+                for j in range(W):
+                    # Calculate distances from edges
+                    dt = i if pad_y != 0 else H
+                    db = H - i if pad_y != 0 else H
+                    dl = j if pad_x != 0 else W
+                    dr = W - j if pad_x != 0 else W
+                    
+                    # Find minimum distance to any edge
+                    d = min(dt, db, dl, dr)
+                    
+                    if d >= mask_feather:
+                        continue
+                    
+                    # Calculate and square the feather value for smooth falloff
+                    v = (mask_feather - d) / mask_feather
+                    v = v * v  # Square for smoother falloff
+                    
+                    if mask is None:
+                        t[:, i, j] = v
+                    else:
+                        t[:, pad_y + i, pad_x + j] = v
         
-        return (padded_image, mask)
+        # Finalize mask based on whether input mask was provided
+        if mask is None:
+            new_mask[:, pad_y:pad_y + H, pad_x:pad_x + W] = t
+            return (padded_image, new_mask,)
+        else:
+            return (padded_image, mask,)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {
