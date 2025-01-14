@@ -13,6 +13,7 @@ from .speed_ramp import SpeedRampNode
 from .string_contact_multi import StringContactMulti
 from .node_value_to_string import NodeValue2StringMulti
 from .outpaint_padding import OutpaintPadding
+from .video_extend import LoadVideoForExtending, PrepVideoForExtend
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -32,7 +33,11 @@ NODE_CLASS_MAPPINGS = {
     "LoadImagePlus": LoadImagePlusKlinter,
     "AspectSelector": AspectSelector,
     "SpeedRamp": SpeedRampNode,
-    "OutpaintPadding": OutpaintPadding
+    "OutpaintPadding": OutpaintPadding,
+    
+    # Video processing nodes
+    "LoadVideoForExtendingKlinter": LoadVideoForExtending,
+    "PrepVideoForExtendKlinter": PrepVideoForExtend
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -53,7 +58,11 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImagePlus": "Load Image Plus - klinter",
     "AspectSelector": "Aspect Selector - klinter",
     "SpeedRamp": "Speed Ramp - klinter",
-    "OutpaintPadding": "Outpaint Padding - Klinter"
+    "OutpaintPadding": "Outpaint Padding - Klinter",
+    
+    # Video processing nodes
+    "LoadVideoForExtendingKlinter": "Load Video For Extending - Klinter",
+    "PrepVideoForExtendKlinter": "Prep Video For Extend - Klinter"
 }
 
 # Define what symbols this module exports
@@ -67,5 +76,6 @@ WEB_EXTENSIONS = [
     "yellow_bus.js",
     "expandable_yellow_bus.js",
     "queue_counter.js",
-    "node_to_string.js"
+    "node_to_string.js",
+    "video_upload.js"
 ]
