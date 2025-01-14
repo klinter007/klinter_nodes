@@ -115,7 +115,7 @@ app.registerExtension({
                         if (!(event.data instanceof ArrayBuffer)) {
                             try {
                                 const parsedData = JSON.parse(event.data);
-                                
+                                 
                                 if (parsedData.type === 'status') {
                                     const queueRemaining = parsedData.data?.status?.exec_info?.queue_remaining;
                                     const executionStatus = parsedData.data?.status?.exec_info?.status;
@@ -174,7 +174,7 @@ app.registerExtension({
                     // Set total runs from UI input
                     this.totalRuns = Math.max(1, Math.min(
                         parseInt(this.ui.iterationInput.value, 10), 
-                        255
+                        1000
                     ));
 
                     // Update UI initial state to 0
@@ -199,7 +199,7 @@ app.registerExtension({
                         if (!(event.data instanceof ArrayBuffer)) {
                             try {
                                 const parsedData = JSON.parse(event.data);
-                                
+                                 
                                 // Check for workflow completion
                                 if (
                                     this.isRunning && 
