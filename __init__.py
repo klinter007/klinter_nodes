@@ -14,6 +14,7 @@ from .string_contact_multi import StringContactMulti
 from .node_value_to_string import NodeValue2StringMulti
 from .outpaint_padding import OutpaintPadding
 from .video_extend import LoadVideoForExtending, PrepVideoForExtend
+from .json_extractor import JsonExtractorKlinter
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -37,7 +38,10 @@ NODE_CLASS_MAPPINGS = {
     
     # Video processing nodes
     "LoadVideoForExtendingKlinter": LoadVideoForExtending,
-    "PrepVideoForExtendKlinter": PrepVideoForExtend
+    "PrepVideoForExtendKlinter": PrepVideoForExtend,
+    
+    # JSON processing nodes
+    "Json Extractor - klinter": JsonExtractorKlinter
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -62,7 +66,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     
     # Video processing nodes
     "LoadVideoForExtendingKlinter": "Load Video For Extending - Klinter",
-    "PrepVideoForExtendKlinter": "Prep Video For Extend - Klinter"
+    "PrepVideoForExtendKlinter": "Prep Video For Extend - Klinter",
+    
+    # JSON processing nodes
+    "Json Extractor - klinter": "Json Extractor - klinter"
 }
 
 # Define what symbols this module exports
