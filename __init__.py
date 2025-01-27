@@ -15,6 +15,8 @@ from .node_value_to_string import NodeValue2StringMulti
 from .outpaint_padding import OutpaintPadding
 from .video_extend import LoadVideoForExtending, PrepVideoForExtend
 from .json_extractor import JsonExtractorKlinter
+from .save_audio_plus import SaveAudioPlus
+
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -41,7 +43,10 @@ NODE_CLASS_MAPPINGS = {
     "PrepVideoForExtendKlinter": PrepVideoForExtend,
     
     # JSON processing nodes
-    "Json Extractor - klinter": JsonExtractorKlinter
+    "Json Extractor - klinter": JsonExtractorKlinter,
+    
+    # Audio processing nodes
+    "SaveAudioPlus": SaveAudioPlus
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -69,7 +74,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PrepVideoForExtendKlinter": "Prep Video For Extend - Klinter",
     
     # JSON processing nodes
-    "Json Extractor - klinter": "Json Extractor - klinter"
+    "Json Extractor - klinter": "Json Extractor - klinter",
+    
+    # Audio processing nodes
+    "SaveAudioPlus": "Save Audio+ - Klinter"
 }
 
 # Define what symbols this module exports
@@ -82,7 +90,10 @@ WEB_DIRECTORY = "./js"
 WEB_EXTENSIONS = [
     "yellow_bus.js",
     "expandable_yellow_bus.js",
-    "queue_counter.js",
+    "queue_counter_logic.js",
+    "queue_counter_ui.js",
     "node_to_string.js",
+    "nodevalue2string.js",
+    "string_contact_multi.js",
     "video_upload.js"
 ]
