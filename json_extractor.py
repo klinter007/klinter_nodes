@@ -22,7 +22,7 @@ class JsonExtractorKlinter:
     CATEGORY = "utils/json"
 
     def extract_json_value(self, json_input: str, key_to_extract: str) -> Tuple[str]:
-        """Extract a specific value from JSON input, ensuring that quoted text remains intact.
+        """Extract a specific value from JSON input, ensuring proper escaping.
 
         Args:
             json_input: The input string that should contain a valid JSON structure.
@@ -34,7 +34,7 @@ class JsonExtractorKlinter:
         Raises:
             ValueError: If JSON is invalid or the key is not found.
         """
-        # Step 1: Normalize input (replace '/n' with '\n')
+        # Step 1: Normalize input
         cleaned_input = json_input.replace('/n', '\n')
 
         # Step 2: Extract JSON-like substring
@@ -45,6 +45,13 @@ class JsonExtractorKlinter:
             raise ValueError("Could not find a valid JSON object in the input.")
 
         candidate_json = cleaned_input[start_index:end_index + 1].strip()
+
+        # Fix common JSON issues (unescaped quotes)
+        candidate_json = re.sub(
+            r'(?<!\\)"(.*?)"(?=\s*[:,\]])',
+            lambda m: '"' + m.group(1).replace('"', '\\"') + '"',
+            candidate_json
+        )
 
         # Step 3: Parse JSON
         try:
