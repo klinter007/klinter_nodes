@@ -48,7 +48,7 @@ app.registerExtension({
         const iterationInput = document.createElement('input');
         iterationInput.type = 'number';
         iterationInput.min = '1';
-        iterationInput.max = '1000';
+        iterationInput.max = '12500';
         iterationInput.value = '1';
         iterationInput.style.cssText = `
             width: 60px;
