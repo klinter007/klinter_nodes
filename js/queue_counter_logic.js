@@ -174,7 +174,7 @@ app.registerExtension({
                     // Set total runs from UI input
                     this.totalRuns = Math.max(1, Math.min(
                         parseInt(this.ui.iterationInput.value, 10), 
-                        1000
+                        12500
                     ));
 
                     // Update UI initial state to 0
