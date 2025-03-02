@@ -1,4 +1,4 @@
-"""Outpaint Padding Node - adds padding around images for outpainting effects."""
+"""Outpaint Padding Node - adds padding around images for outpainting effects and provides a zoomed-out option."""
 
 import torch
 import torch.nn.functional as F
@@ -6,6 +6,9 @@ import torch.nn.functional as F
 class OutpaintPadding:
     """
     This node adds padding around an image for outpainting purposes.
+    It returns two outputs:
+      1. padded_image: The original padded image with the computed mask.
+      2. zoomed_out_img: The padded image resized back to the original input dimensions.
     """
     
     upscale_methods = ["nearest-exact", "bilinear", "area", "bicubic", "lanczos"]
@@ -24,23 +27,16 @@ class OutpaintPadding:
                 }),
                 "upscale_method": (s.upscale_methods,),
             },
-            "optional": {
-                "mask": ("MASK",),
-            }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK")
-    RETURN_NAMES = ("padded_image", "mask")
+    # Now returning three outputs: the padded image, the mask, and the zoomed out image.
+    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
+    RETURN_NAMES = ("padded_image", "zoomed_out_img", "mask")
     FUNCTION = "expand_image"
     CATEGORY = "klinter"
     NODE_COLOR = "#32CD32"  # Lime Green
 
-    def expand_image(self, image, zoom_factor, mask_feather, upscale_method, mask=None):
-        # Handle input mask if provided
-        if mask is not None:
-            if torch.allclose(mask, torch.zeros_like(mask)):
-                mask = None
-
+    def expand_image(self, image, zoom_factor, mask_feather, upscale_method):
         zoom = float(zoom_factor.replace('x', ''))
         B, H, W, C = image.shape
         new_width = int(W * zoom)
@@ -53,15 +49,9 @@ class OutpaintPadding:
         padded_image = torch.ones((B, new_height, new_width, C), dtype=torch.float32) * 0.5
         padded_image[:, pad_y:pad_y+H, pad_x:pad_x+W, :] = image
 
-        if mask is not None:
-            # If mask provided, pad it to fit new size
-            mask = F.pad(mask, (pad_x, pad_x, pad_y, pad_y), mode='constant', value=0)
-            mask = 1 - mask  # Invert the mask
-            t = torch.zeros_like(mask)
-        else:
-            # Create new mask
-            new_mask = torch.ones((B, new_height, new_width), dtype=torch.float32)
-            t = torch.zeros((B, H, W), dtype=torch.float32)
+        # Create new mask filled with ones and then apply feathering
+        new_mask = torch.ones((B, new_height, new_width), dtype=torch.float32)
+        t = torch.zeros((B, H, W), dtype=torch.float32)
             
         # Apply feathering if specified
         if mask_feather > 0 and mask_feather * 2 < H and mask_feather * 2 < W:
@@ -81,19 +71,16 @@ class OutpaintPadding:
                     
                     # Calculate and square the feather value for smooth falloff
                     v = (mask_feather - d) / mask_feather
-                    v = v * v  # Square for smoother falloff
-                    
-                    if mask is None:
-                        t[:, i, j] = v
-                    else:
-                        t[:, pad_y + i, pad_x + j] = v
-        
-        # Finalize mask based on whether input mask was provided
-        if mask is None:
-            new_mask[:, pad_y:pad_y + H, pad_x:pad_x + W] = t
-            return (padded_image, new_mask,)
-        else:
-            return (padded_image, mask,)
+                    t[:, i, j] = v * v
+            
+        new_mask[:, pad_y:pad_y + H, pad_x:pad_x + W] = t
+
+        # Create zoomed out image: resize the padded image back to the original dimensions
+        padded_tensor = padded_image.permute(0, 3, 1, 2)  # Convert to [B, C, H, W] for interpolation
+        zoomed_out_tensor = F.interpolate(padded_tensor, size=(H, W), mode="bicubic", align_corners=False)
+        zoomed_out_img = zoomed_out_tensor.permute(0, 2, 3, 1)  # Convert back to [B, H, W, C]
+
+        return padded_image, new_mask, zoomed_out_img
 
 # Register the node
 NODE_CLASS_MAPPINGS = {
