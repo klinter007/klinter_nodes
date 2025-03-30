@@ -1,5 +1,5 @@
 {
-  "last_node_id": 9,
+  "last_node_id": 10,
   "last_link_id": 18,
   "nodes": [
     {
@@ -33,6 +33,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.18",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
@@ -52,7 +54,7 @@
         692.7186279296875
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -63,6 +65,8 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.18",
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
@@ -79,7 +83,7 @@
         466.495849609375
       ],
       "flags": {},
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -90,6 +94,8 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfyui_essentials",
+        "ver": "33ff89fd354d8ec3ab6affb605a79a931b445d99",
         "Node name for S&R": "MaskPreview+"
       },
       "widgets_values": []
@@ -103,10 +109,10 @@
       ],
       "size": [
         327.5999755859375,
-        126
+        146
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [
         {
@@ -131,9 +137,16 @@
             15
           ],
           "slot_index": 1
+        },
+        {
+          "name": "zoomed_out_img",
+          "type": "IMAGE",
+          "links": null
         }
       ],
       "properties": {
+        "cnr_id": "klinter_nodes",
+        "ver": "638e42e91fa00b5e11de2a04bb5dac9b52d7f34b",
         "Node name for S&R": "OutpaintPadding"
       },
       "widgets_values": [
@@ -141,6 +154,29 @@
         40,
         "nearest-exact"
       ]
+    },
+    {
+      "id": 10,
+      "type": "Note",
+      "pos": [
+        -560.962646484375,
+        -158.0760040283203
+      ],
+      "size": [
+        305.8709411621094,
+        312.0374755859375
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "padded_image will add padding around the image\n\nzoomed out img will first add the padding, but then resize the image with the padding to the original image size.\n\n(still looking for a better name to call that output)"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -173,13 +209,17 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4197904156481119,
+      "scale": 0.38114645532034375,
       "offset": [
-        3273.1919407200226,
-        1268.3003052499294
+        3539.1558041579333,
+        1029.9533767918056
       ]
     },
-    "ue_links": []
+    "ue_links": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }

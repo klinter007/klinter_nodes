@@ -1,4 +1,11 @@
-"""Outpaint Padding Node - adds padding around images for outpainting effects and provides a zoomed-out option."""
+"""Outpaint Padding Node - adds padding around images for outpainting effects and computes corresponding masks.
+
+Outputs:
+  1. padded_image: The original image placed onto a padded canvas.
+  2. padded_mask: The mask corresponding to the padded image dimensions.
+  3. zoomed out image: The padded image resized to the original image size.
+  4. zoomed out mask: The padded mask resized to the original image dimensions.
+"""
 
 import torch
 import torch.nn.functional as F
@@ -6,9 +13,11 @@ import torch.nn.functional as F
 class OutpaintPadding:
     """
     This node adds padding around an image for outpainting purposes.
-    It returns two outputs:
-      1. padded_image: The original padded image with the computed mask.
-      2. zoomed_out_img: The padded image resized back to the original input dimensions.
+    It returns four outputs:
+      1. padded_image: The original image placed onto a padded canvas.
+      2. padded_mask: The mask computed over the padded image dimensions.
+      3. zoomed out image: The padded image resized to the original image size.
+      4. zoomed out mask: The padded mask resized to the original image dimensions.
     """
     
     upscale_methods = ["nearest-exact", "bilinear", "area", "bicubic", "lanczos"]
@@ -29,9 +38,9 @@ class OutpaintPadding:
             },
         }
 
-    # Now returning three outputs: the padded image, the mask, and the zoomed out image.
-    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
-    RETURN_NAMES = ("padded_image", "zoomed_out_img", "mask")
+    # Updated outputs: padded_image, padded_mask, zoomed out image, zoomed out mask.
+    RETURN_TYPES = ("IMAGE", "MASK", "IMAGE", "MASK")
+    RETURN_NAMES = ("padded_image", "padded_mask", "zoomed out image", "zoomed out mask")
     FUNCTION = "expand_image"
     CATEGORY = "klinter"
     NODE_COLOR = "#32CD32"  # Lime Green
@@ -49,7 +58,7 @@ class OutpaintPadding:
         padded_image = torch.ones((B, new_height, new_width, C), dtype=torch.float32) * 0.5
         padded_image[:, pad_y:pad_y+H, pad_x:pad_x+W, :] = image
 
-        # Create new mask filled with ones and then apply feathering
+        # Create padded_mask filled with ones and then apply feathering
         new_mask = torch.ones((B, new_height, new_width), dtype=torch.float32)
         t = torch.zeros((B, H, W), dtype=torch.float32)
             
@@ -75,12 +84,17 @@ class OutpaintPadding:
             
         new_mask[:, pad_y:pad_y + H, pad_x:pad_x + W] = t
 
-        # Create zoomed out image: resize the padded image back to the original dimensions
-        padded_tensor = padded_image.permute(0, 3, 1, 2)  # Convert to [B, C, H, W] for interpolation
+        # Create zoomed out image: resize padded_image to original dimensions
+        padded_tensor = padded_image.permute(0, 3, 1, 2)  # [B, C, new_height, new_width]
         zoomed_out_tensor = F.interpolate(padded_tensor, size=(H, W), mode="bicubic", align_corners=False)
-        zoomed_out_img = zoomed_out_tensor.permute(0, 2, 3, 1)  # Convert back to [B, H, W, C]
+        zoomed_out_image = zoomed_out_tensor.permute(0, 2, 3, 1)  # [B, H, W, C]
 
-        return padded_image, new_mask, zoomed_out_img
+        # Create zoomed out mask: resize padded_mask to original dimensions
+        mask_tensor = new_mask.unsqueeze(1)  # [B, 1, new_height, new_width]
+        zoomed_mask_tensor = F.interpolate(mask_tensor, size=(H, W), mode="bicubic", align_corners=False)
+        zoomed_out_mask = zoomed_mask_tensor.squeeze(1)  # [B, H, W]
+
+        return padded_image, new_mask, zoomed_out_image, zoomed_out_mask
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

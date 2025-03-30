@@ -16,7 +16,7 @@ from .outpaint_padding import OutpaintPadding
 from .video_extend import LoadVideoForExtending, PrepVideoForExtend
 from .json_extractor import JsonExtractorKlinter
 from .save_audio_plus import SaveAudioPlus
-
+from .bbox_cropper import BBoxCropper
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -37,6 +37,7 @@ NODE_CLASS_MAPPINGS = {
     "AspectSelector": AspectSelector,
     "SpeedRamp": SpeedRampNode,
     "OutpaintPadding": OutpaintPadding,
+    "BBoxCropper": BBoxCropper,
     
     # Video processing nodes
     "LoadVideoForExtendingKlinter": LoadVideoForExtending,
@@ -68,6 +69,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "AspectSelector": "Aspect Selector - klinter",
     "SpeedRamp": "Speed Ramp - klinter",
     "OutpaintPadding": "Outpaint Padding - Klinter",
+    "BBoxCropper": "BBox Cropper - klinter",
     
     # Video processing nodes
     "LoadVideoForExtendingKlinter": "Load Video For Extending - Klinter",
