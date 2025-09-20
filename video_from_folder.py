@@ -3,10 +3,28 @@
 import os
 import torch
 import numpy as np
-import subprocess
-import json
 import random
 import folder_paths
+
+# Try to import video reading libraries
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
+
+try:
+    import imageio
+    HAS_IMAGEIO = True
+except ImportError:
+    HAS_IMAGEIO = False
+
+try:
+    import subprocess
+    import json
+    HAS_FFMPEG = True
+except ImportError:
+    HAS_FFMPEG = False
 
 class VideoFromFolder:
     @classmethod
@@ -54,90 +72,191 @@ class VideoFromFolder:
         return video_files
 
     def get_video_info(self, video_path):
-        """Get video information using ffprobe."""
-        try:
-            cmd = [
-                'ffprobe',
-                '-v', 'quiet',
-                '-print_format', 'json',
-                '-show_format',
-                '-show_streams',
-                video_path
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            data = json.loads(result.stdout)
-            
-            video_stream = None
-            for stream in data.get('streams', []):
-                if stream.get('codec_type') == 'video':
-                    video_stream = stream
-                    break
-            
-            if not video_stream:
-                raise ValueError("No video stream found")
-            
-            # Extract FPS
-            fps_str = video_stream.get('r_frame_rate', '24/1')
-            if '/' in fps_str:
-                num, den = map(int, fps_str.split('/'))
-                fps = num / den if den != 0 else 24.0
-            else:
-                fps = float(fps_str)
-            
-            width = int(video_stream.get('width', 0))
-            height = int(video_stream.get('height', 0))
-            duration = float(data.get('format', {}).get('duration', 0))
-            
-            return {
-                'fps': fps,
-                'width': width,
-                'height': height,
-                'duration': duration
-            }
-        except Exception as e:
-            print(f"Error getting video info: {e}")
-            # Return defaults if ffprobe fails
-            return {
-                'fps': 24.0,
-                'width': 1920,
-                'height': 1080,
-                'duration': 0
-            }
+        """Get video information using available methods."""
+        # Try cv2 first
+        if HAS_CV2:
+            try:
+                cap = cv2.VideoCapture(video_path)
+                if cap.isOpened():
+                    fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
+                    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                    duration = frame_count / fps if fps > 0 else 0
+                    cap.release()
+                    
+                    return {
+                        'fps': fps,
+                        'width': width,
+                        'height': height,
+                        'duration': duration,
+                        'frame_count': frame_count
+                    }
+            except Exception as e:
+                print(f"cv2 failed to get video info: {e}")
+        
+        # Try imageio
+        if HAS_IMAGEIO:
+            try:
+                reader = imageio.get_reader(video_path)
+                meta = reader.get_meta_data()
+                fps = meta.get('fps', 24.0)
+                width = meta.get('size', [1920, 1080])[0]
+                height = meta.get('size', [1920, 1080])[1]
+                duration = meta.get('duration', 0)
+                reader.close()
+                
+                return {
+                    'fps': fps,
+                    'width': width,
+                    'height': height,
+                    'duration': duration
+                }
+            except Exception as e:
+                print(f"imageio failed to get video info: {e}")
+        
+        # Try ffprobe if available
+        if HAS_FFMPEG:
+            try:
+                cmd = [
+                    'ffprobe',
+                    '-v', 'quiet',
+                    '-print_format', 'json',
+                    '-show_format',
+                    '-show_streams',
+                    video_path
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                data = json.loads(result.stdout)
+                
+                video_stream = None
+                for stream in data.get('streams', []):
+                    if stream.get('codec_type') == 'video':
+                        video_stream = stream
+                        break
+                
+                if video_stream:
+                    fps_str = video_stream.get('r_frame_rate', '24/1')
+                    if '/' in fps_str:
+                        num, den = map(int, fps_str.split('/'))
+                        fps = num / den if den != 0 else 24.0
+                    else:
+                        fps = float(fps_str)
+                    
+                    return {
+                        'fps': fps,
+                        'width': int(video_stream.get('width', 1920)),
+                        'height': int(video_stream.get('height', 1080)),
+                        'duration': float(data.get('format', {}).get('duration', 0))
+                    }
+            except Exception as e:
+                print(f"ffprobe failed: {e}")
+        
+        # Return defaults if all methods fail
+        print(f"Warning: Could not get video info for {video_path}, using defaults")
+        return {
+            'fps': 24.0,
+            'width': 1920,
+            'height': 1080,
+            'duration': 0
+        }
 
     def load_video_frames(self, video_path):
-        """Load video and convert to tensor of frames."""
+        """Load video and convert to tensor of frames using available methods."""
+        frames = []
         info = self.get_video_info(video_path)
         
-        # Convert video to frames using ffmpeg
-        cmd = [
-            'ffmpeg',
-            '-i', video_path,
-            '-f', 'image2pipe',
-            '-pix_fmt', 'rgb24',
-            '-vcodec', 'rawvideo',
-            '-'
-        ]
+        # Try cv2 first (most reliable and commonly available)
+        if HAS_CV2:
+            try:
+                cap = cv2.VideoCapture(video_path)
+                if cap.isOpened():
+                    while True:
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
+                        # Convert BGR to RGB
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        frame_tensor = torch.from_numpy(frame_rgb.astype(np.float32) / 255.0)
+                        frames.append(frame_tensor)
+                    cap.release()
+                    
+                    if frames:
+                        return torch.stack(frames), info['fps']
+                    else:
+                        print("cv2: No frames extracted")
+            except Exception as e:
+                print(f"cv2 failed to load video: {e}")
+                frames = []  # Reset frames if cv2 failed
         
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        # Try imageio if cv2 failed or not available
+        if HAS_IMAGEIO and not frames:
+            try:
+                reader = imageio.get_reader(video_path)
+                for frame in reader:
+                    frame_tensor = torch.from_numpy(frame.astype(np.float32) / 255.0)
+                    frames.append(frame_tensor)
+                reader.close()
+                
+                if frames:
+                    return torch.stack(frames), info['fps']
+                else:
+                    print("imageio: No frames extracted")
+            except Exception as e:
+                print(f"imageio failed to load video: {e}")
+                frames = []  # Reset frames if imageio failed
         
-        frames = []
-        frame_size = info['width'] * info['height'] * 3
+        # Try ffmpeg as last resort
+        if HAS_FFMPEG and not frames:
+            try:
+                # Check if ffmpeg is actually available in system
+                subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
+                
+                cmd = [
+                    'ffmpeg',
+                    '-i', video_path,
+                    '-f', 'image2pipe',
+                    '-pix_fmt', 'rgb24',
+                    '-vcodec', 'rawvideo',
+                    '-'
+                ]
+                
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                
+                frame_size = info['width'] * info['height'] * 3
+                
+                while True:
+                    raw_frame = process.stdout.read(frame_size)
+                    if len(raw_frame) != frame_size:
+                        break
+                    
+                    frame = np.frombuffer(raw_frame, dtype=np.uint8)
+                    frame = frame.reshape((info['height'], info['width'], 3))
+                    frame_tensor = torch.from_numpy(frame.astype(np.float32) / 255.0)
+                    frames.append(frame_tensor)
+                
+                process.stdout.close()
+                process.wait()
+                
+                if frames:
+                    return torch.stack(frames), info['fps']
+            except FileNotFoundError:
+                print("ffmpeg not found in system PATH")
+            except Exception as e:
+                print(f"ffmpeg failed to load video: {e}")
         
-        while True:
-            raw_frame = process.stdout.read(frame_size)
-            if len(raw_frame) != frame_size:
-                break
-            
-            frame = np.frombuffer(raw_frame, dtype=np.uint8)
-            frame = frame.reshape((info['height'], info['width'], 3))
-            frame_tensor = torch.from_numpy(frame.astype(np.float32) / 255.0)
-            frames.append(frame_tensor)
-        
-        process.stdout.close()
-        process.wait()
-        
+        # If all methods failed
         if not frames:
-            raise ValueError("No frames could be extracted from the video")
+            error_msg = "Could not load video. Please install one of: "
+            requirements = []
+            if not HAS_CV2:
+                requirements.append("opencv-python (pip install opencv-python)")
+            if not HAS_IMAGEIO:
+                requirements.append("imageio[ffmpeg] (pip install imageio[ffmpeg])")
+            if not HAS_FFMPEG:
+                requirements.append("ffmpeg (system package)")
+            
+            raise ValueError(error_msg + ", ".join(requirements))
         
         return torch.stack(frames), info['fps']
 
