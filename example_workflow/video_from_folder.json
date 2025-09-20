@@ -1,0 +1,116 @@
+{
+  "last_node_id": 5,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "VideoFromFolder",
+      "pos": [100, 100],
+      "size": [400, 180],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "frames",
+          "type": "IMAGE",
+          "links": [1],
+          "slot_index": 0
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": [2],
+          "slot_index": 1
+        },
+        {
+          "name": "video_index",
+          "type": "INT",
+          "links": null,
+          "slot_index": 2
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [3],
+          "slot_index": 3
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "/path/to/videos/folder",
+        0,
+        "increment",
+        0
+      ]
+    },
+    {
+      "id": 2,
+      "type": "PreviewImage",
+      "pos": [600, 100],
+      "size": [210, 246],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": []
+    },
+    {
+      "id": 3,
+      "type": "ShowText|pysssss",
+      "pos": [600, 400],
+      "size": [315, 76],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "slot_index": 0
+        }
+      ],
+      "properties": {},
+      "widgets_values": ["", ""]
+    },
+    {
+      "id": 4,
+      "type": "Note",
+      "pos": [100, 350],
+      "size": [400, 200],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "properties": {
+        "text": "Video From Folder Node Usage:\n\n1. Set folder_path to directory containing videos\n2. seed: Counter/random seed value\n3. seed_mode options:\n   - 'increment': Increments through videos\n   - 'random': Random selection using seed\n   - 'fixed': Always uses seed_offset as index\n4. seed_offset: Additional offset for selection\n\nThe node automatically loops when index exceeds\nthe number of videos in the folder."
+      },
+      "widgets_values": [""]
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "IMAGE"],
+    [2, 1, 1, 3, 0, "STRING"],
+    [3, 1, 3, null, null, "FLOAT"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}
