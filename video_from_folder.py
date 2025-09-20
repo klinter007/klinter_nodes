@@ -40,8 +40,8 @@ class VideoFromFolder:
             }
         }
     
-    RETURN_TYPES = ("IMAGE", "STRING", "INT", "FLOAT")
-    RETURN_NAMES = ("frames", "video_path", "video_index", "fps")
+    RETURN_TYPES = ("IMAGE", "STRING", "INT", "FLOAT", "FLOAT", "INT")
+    RETURN_NAMES = ("frames", "video_path", "video_index", "fps", "duration", "frame_count")
     FUNCTION = "load_video_from_folder"
     CATEGORY = "klinter"
     NODE_COLOR = "#8B4513"  # Saddle Brown for video nodes
@@ -162,7 +162,11 @@ class VideoFromFolder:
         }
 
     def load_video_frames(self, video_path):
-        """Load video and convert to tensor of frames using available methods."""
+        """Load video and convert to tensor of frames using available methods.
+        
+        Returns:
+            Tuple of (frames tensor, fps, duration, frame_count)
+        """
         frames = []
         info = self.get_video_info(video_path)
         
@@ -182,7 +186,9 @@ class VideoFromFolder:
                     cap.release()
                     
                     if frames:
-                        return torch.stack(frames), info['fps']
+                        frame_count = len(frames)
+                        duration = frame_count / info['fps'] if info['fps'] > 0 else 0
+                        return torch.stack(frames), info['fps'], duration, frame_count
                     else:
                         print("cv2: No frames extracted")
             except Exception as e:
@@ -199,7 +205,9 @@ class VideoFromFolder:
                 reader.close()
                 
                 if frames:
-                    return torch.stack(frames), info['fps']
+                    frame_count = len(frames)
+                    duration = frame_count / info['fps'] if info['fps'] > 0 else 0
+                    return torch.stack(frames), info['fps'], duration, frame_count
                 else:
                     print("imageio: No frames extracted")
             except Exception as e:
@@ -239,7 +247,9 @@ class VideoFromFolder:
                 process.wait()
                 
                 if frames:
-                    return torch.stack(frames), info['fps']
+                    frame_count = len(frames)
+                    duration = frame_count / info['fps'] if info['fps'] > 0 else 0
+                    return torch.stack(frames), info['fps'], duration, frame_count
             except FileNotFoundError:
                 print("ffmpeg not found in system PATH")
             except Exception as e:
@@ -258,7 +268,9 @@ class VideoFromFolder:
             
             raise ValueError(error_msg + ", ".join(requirements))
         
-        return torch.stack(frames), info['fps']
+        frame_count = len(frames)
+        duration = frame_count / info['fps'] if info['fps'] > 0 else 0
+        return torch.stack(frames), info['fps'], duration, frame_count
 
     def calculate_video_index(self, seed, seed_mode, seed_offset, num_videos):
         """Calculate which video index to use based on seed and mode."""
@@ -286,7 +298,7 @@ class VideoFromFolder:
             seed_offset: Additional offset to apply to the selection
         
         Returns:
-            Tuple of (frames tensor, video path, video index, fps)
+            Tuple of (frames tensor, video path, video index, fps, duration, frame_count)
         """
         # Get all video files in the folder
         video_files = self.get_video_files(folder_path)
@@ -303,9 +315,9 @@ class VideoFromFolder:
         print(f"Seed: {seed}, Mode: {seed_mode}, Offset: {seed_offset}")
         
         # Load the video frames
-        frames, fps = self.load_video_frames(full_video_path)
+        frames, fps, duration, frame_count = self.load_video_frames(full_video_path)
         
-        return (frames, full_video_path, video_index, fps)
+        return (frames, full_video_path, video_index, fps, duration, frame_count)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {
