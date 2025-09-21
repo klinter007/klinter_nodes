@@ -1,0 +1,56 @@
+{
+  "last_node_id": 5,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "OutputTester",
+      "pos": [500, 200],
+      "size": {"0": 400, "1": 200},
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input_value",
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "optional_input",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "type_info",
+          "type": "STRING",
+          "links": [],
+          "shape": 3
+        },
+        {
+          "name": "value_info",
+          "type": "STRING",
+          "links": [],
+          "shape": 3
+        },
+        {
+          "name": "passthrough",
+          "type": "*",
+          "links": [],
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OutputTester"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

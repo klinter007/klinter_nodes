@@ -19,6 +19,7 @@ from .nano_banana_multi_input import NanoBananaMultiInput
 from .json_extractor import JsonExtractorKlinter
 from .save_audio_plus import SaveAudioPlus
 from .bbox_cropper import BBoxCropper
+from .output_tester import OutputTester
 
 # Mapping of node identifiers to their respective class implementations
 NODE_CLASS_MAPPINGS = {
@@ -53,7 +54,10 @@ NODE_CLASS_MAPPINGS = {
     "Json Extractor - klinter": JsonExtractorKlinter,
     
     # Audio processing nodes
-    "SaveAudioPlus": SaveAudioPlus
+    "SaveAudioPlus": SaveAudioPlus,
+    
+    # Debug and testing nodes
+    "OutputTester": OutputTester
 }
 
 # Mapping of node identifiers to their display names for UI or logging purposes
@@ -89,7 +93,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Json Extractor - klinter": "Json Extractor - klinter",
     
     # Audio processing nodes
-    "SaveAudioPlus": "Save Audio+ - Klinter"
+    "SaveAudioPlus": "Save Audio+ - Klinter",
+    
+    # Debug and testing nodes
+    "OutputTester": "Output Tester - klinter"
 }
 
 # Define what symbols this module exports
