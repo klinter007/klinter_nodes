@@ -24,13 +24,13 @@ except ImportError:
         USE_IMAGE_GENERATION = False
         print("No Google AI library found. Install with: pip install google-genai")
 
-class MultiImageAspect:
+class NanoBananaMultiInput:
     """
-    Multi Image with Aspect Ratio - Combines multiple image inputs with aspect ratio templates
+    Nano Banana Multi Input - Multiple image editing and composition with aspect ratio control
     
     This node supports up to 5 input images and uses transparent PNG templates to guide
     the aspect ratio of generated images. Calls Google's Gemini API directly for creating
-    multi-image compositions using Google's state-of-the-art Gemini model.
+    and editing images using Google's state-of-the-art Gemini model.
     """
     
     @classmethod
@@ -49,9 +49,6 @@ class MultiImageAspect:
                 "image_3": ("IMAGE",),
                 "image_4": ("IMAGE",),
                 "image_5": ("IMAGE",),
-                "mode": (["text_to_image", "multi_image_composition", "image_editing"], {
-                    "default": "text_to_image"
-                }),
                 "aspect_ratio": (["passthrough", "1:1", "3:4", "4:3", "9:16", "16:9"], {
                     "default": "passthrough"
                 }),
@@ -66,7 +63,7 @@ class MultiImageAspect:
     RETURN_NAMES = ("generated_image", "description")
     FUNCTION = "process_images"
     CATEGORY = "klinter"
-    NODE_COLOR = "#FF6B6B"  # Coral red for distinction
+    NODE_COLOR = "#FFEB3B"  # Yellow for nano banana
     
     def __init__(self):
         # Get Gemini API key from environment variable (no hardcoding!)
@@ -94,16 +91,16 @@ class MultiImageAspect:
                 if USE_IMAGE_GENERATION:
                     # Use Google GenAI for image generation
                     self.client = genai.Client(api_key=key_to_use)
-                    print("Multi Image Aspect: Image generation client initialized successfully!")
+                    print("Nano Banana Multi Input: Image generation client initialized successfully!")
                     return True
                 else:
                     # Use Google Generative AI for text only
                     genai.configure(api_key=key_to_use)
                     self.model = genai.GenerativeModel('gemini-1.5-flash')
-                    print("Multi Image Aspect: Text model initialized (text-only mode)!")
+                    print("Nano Banana Multi Input: Text model initialized (text-only mode)!")
                     return True
             except Exception as e:
-                print(f"Failed to initialize Multi Image Aspect client: {e}")
+                print(f"Failed to initialize Nano Banana Multi Input client: {e}")
                 return False
         return False
     
@@ -190,7 +187,6 @@ class MultiImageAspect:
                       image_3: Optional[torch.Tensor] = None,
                       image_4: Optional[torch.Tensor] = None,
                       image_5: Optional[torch.Tensor] = None,
-                      mode: str = "text_to_image",
                       aspect_ratio: str = "passthrough",
                       api_key: str = "") -> Tuple[torch.Tensor, str]:
         """
@@ -209,7 +205,7 @@ class MultiImageAspect:
                 raise ValueError("Google AI library not installed. Install with: pip install google-genai")
             
             if not (self.model or self.client):
-                raise ValueError("Multi Image Aspect not initialized. Please provide API key via input or set GEMINI_API_KEY environment variable.")
+                raise ValueError("Nano Banana Multi Input not initialized. Please provide API key via input or set GEMINI_API_KEY environment variable.")
             
             # Collect all provided images
             input_images = []
@@ -226,16 +222,14 @@ class MultiImageAspect:
             transparent_template = self.load_transparent_png_for_aspect_ratio(aspect_ratio)
             
             # Prepare content for the API call
-            contents = []
+            contents = [prompt]
             
-            if mode == "multi_image_composition" and len(pil_images) >= 2:
-                # Multi-image composition mode
-                print(f"Mode: Multi-Image Composition ({len(pil_images)} images)")
+            # Determine mode automatically based on input images
+            if len(pil_images) > 0:
+                # Image editing/composition mode when images are provided
+                print(f"Nano Banana Mode: Image Editing/Composition ({len(pil_images)} images)")
                 print(f"Prompt: {prompt}")
                 print(f"Aspect Ratio: {aspect_ratio}")
-                
-                # Add prompt first
-                contents = [prompt]
                 
                 # Add transparent template if available
                 if transparent_template:
@@ -244,43 +238,16 @@ class MultiImageAspect:
                 
                 # Add all input images
                 contents.extend(pil_images)
-            
-            elif mode == "image_editing" and len(pil_images) >= 1:
-                # Image editing mode
-                print(f"Mode: Image Editing ({len(pil_images)} images)")
+            else:
+                # Text-to-image mode when no images provided
+                print("Nano Banana Mode: Text-to-Image Generation")
                 print(f"Prompt: {prompt}")
                 print(f"Aspect Ratio: {aspect_ratio}")
-                
-                # Add prompt first
-                contents = [prompt]
-                
-                # Add transparent template if available
-                if transparent_template:
-                    contents.append(transparent_template)
-                    print(f"Added transparent {aspect_ratio} template to guide dimensions")
-                
-                # Add all input images
-                contents.extend(pil_images)
-            
-            elif mode == "text_to_image":
-                # Text-to-image mode
-                print("Mode: Text-to-Image Generation")
-                print(f"Prompt: {prompt}")
-                print(f"Aspect Ratio: {aspect_ratio}")
-                
-                # Add prompt
-                contents = [prompt]
                 
                 # Add transparent template if available
                 if transparent_template:
                     contents.append(transparent_template)
                     print(f"Using transparent {aspect_ratio} template to define output dimensions")
-            
-            else:
-                if mode in ["multi_image_composition", "image_editing"] and len(pil_images) == 0:
-                    raise ValueError(f"{mode} mode requires at least one input image")
-                else:
-                    raise ValueError("Invalid mode or configuration")
             
             print(f"Calling Google Gemini API with {len(contents)} content items...")
             
@@ -390,7 +357,7 @@ class MultiImageAspect:
                     return (placeholder, f"Generated description: {description_text}")
         
         except Exception as e:
-            error_msg = f"Multi Image Aspect Error: {str(e)}"
+            error_msg = f"Nano Banana Multi Input Error: {str(e)}"
             print(error_msg)
             
             # Return fallback image
@@ -411,12 +378,12 @@ class MultiImageAspect:
 
 # Register the node
 NODE_CLASS_MAPPINGS = {
-    "MultiImageAspect": MultiImageAspect
+    "NanoBananaMultiInput": NanoBananaMultiInput
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "MultiImageAspect": "Multi Image Aspect - Klinter"
+    "NanoBananaMultiInput": "Nano Banana Multi Input - Klinter"
 }
 
 # Export the class
-__all__ = ['MultiImageAspect']
+__all__ = ['NanoBananaMultiInput']

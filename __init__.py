@@ -15,7 +15,7 @@ from .node_value_to_string import NodeValue2StringMulti
 from .outpaint_padding import OutpaintPadding
 from .video_extend import LoadVideoForExtending, PrepVideoForExtend
 from .video_from_folder import VideoFromFolder
-from .multi_image_aspect import MultiImageAspect
+from .nano_banana_multi_input import NanoBananaMultiInput
 from .json_extractor import JsonExtractorKlinter
 from .save_audio_plus import SaveAudioPlus
 from .bbox_cropper import BBoxCropper
@@ -47,7 +47,7 @@ NODE_CLASS_MAPPINGS = {
     "VideoFromFolder": VideoFromFolder,
     
     # AI Image Generation nodes
-    "MultiImageAspect": MultiImageAspect,
+    "NanoBananaMultiInput": NanoBananaMultiInput,
     
     # JSON processing nodes
     "Json Extractor - klinter": JsonExtractorKlinter,
@@ -83,7 +83,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "VideoFromFolder": "Video From Folder - Klinter",
     
     # AI Image Generation nodes
-    "MultiImageAspect": "Multi Image Aspect - Klinter",
+    "NanoBananaMultiInput": "Nano Banana Multi Input - Klinter",
     
     # JSON processing nodes
     "Json Extractor - klinter": "Json Extractor - klinter",
