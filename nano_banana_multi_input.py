@@ -28,9 +28,9 @@ class NanoBananaMultiInput:
     """
     Nano Banana Multi Input - Multiple image editing and composition with aspect ratio control
     
-    This node supports up to 5 input images and uses transparent PNG templates to guide
-    the aspect ratio of generated images. Calls Google's Gemini API directly for creating
-    and editing images using Google's state-of-the-art Gemini model.
+    This node supports up to 5 input images and uses Google's Gemini API native aspect ratio
+    configuration for precise image generation control. Calls Google's Gemini API directly 
+    for creating and editing images using Google's state-of-the-art Gemini model.
     """
     
     @classmethod
@@ -49,7 +49,7 @@ class NanoBananaMultiInput:
                 "image_3": ("IMAGE",),
                 "image_4": ("IMAGE",),
                 "image_5": ("IMAGE",),
-                "aspect_ratio": (["passthrough", "1:1", "3:4", "4:3", "9:16", "16:9"], {
+                "aspect_ratio": (["passthrough", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"], {
                     "default": "passthrough"
                 }),
                 "api_key": ("STRING", {
@@ -134,52 +134,6 @@ class NanoBananaMultiInput:
         tensor = torch.from_numpy(np_image).unsqueeze(0)
         return tensor
     
-    def load_transparent_png_for_aspect_ratio(self, aspect_ratio):
-        """Load the transparent PNG that corresponds to the selected aspect ratio
-        
-        Args:
-            aspect_ratio: Aspect ratio string (e.g., "16:9")
-            
-        Returns:
-            PIL Image of the transparent PNG or None if passthrough
-        """
-        if aspect_ratio == "passthrough":
-            print("Using passthrough mode - no aspect ratio template")
-            return None
-        
-        # Map aspect ratios to PNG filenames
-        aspect_ratio_files = {
-            "1:1": "transparent_1x1_2048x2048.png",
-            "3:4": "transparent_3x4_1536x2048.png",
-            "4:3": "transparent_4x3_2048x1536.png",
-            "9:16": "transparent_9x16_1152x2048.png",
-            "16:9": "transparent_16x9_2048x1152.png"
-        }
-        
-        png_filename = aspect_ratio_files.get(aspect_ratio)
-        if not png_filename:
-            print(f"WARNING: No transparent PNG found for aspect ratio {aspect_ratio}")
-            return None
-        
-        # Construct the full path to the transparent PNG
-        # Get the directory where this script is located
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        png_path = os.path.join(script_dir, "AR_png", png_filename)
-        
-        # Check if file exists
-        if not os.path.exists(png_path):
-            print(f"WARNING: Transparent PNG not found at {png_path}")
-            print("Please ensure AR_png folder with transparent templates is in klinter_nodes directory")
-            return None
-        
-        # Load and return the transparent PNG
-        try:
-            transparent_png = Image.open(png_path)
-            print(f"Loaded transparent PNG template: {png_filename} ({transparent_png.size[0]}x{transparent_png.size[1]})")
-            return transparent_png
-        except Exception as e:
-            print(f"ERROR loading transparent PNG: {e}")
-            return None
     
     def process_images(self, prompt: str, 
                       image_1: Optional[torch.Tensor] = None,
@@ -191,7 +145,7 @@ class NanoBananaMultiInput:
                       api_key: str = "") -> Tuple[torch.Tensor, str]:
         """
         Create or edit images using Google Gemini API with support for up to 5 input images
-        and aspect ratio templates to guide output dimensions
+        and built-in aspect ratio configuration via the API
         """
         try:
             # Check if a custom API key was provided
@@ -218,9 +172,6 @@ class NanoBananaMultiInput:
                     pil_images.append(pil_img)
                     print(f"Input image {i} loaded: {pil_img.size}")
             
-            # Load transparent PNG template if aspect ratio is selected
-            transparent_template = self.load_transparent_png_for_aspect_ratio(aspect_ratio)
-            
             # Prepare content for the API call
             contents = [prompt]
             
@@ -231,11 +182,6 @@ class NanoBananaMultiInput:
                 print(f"Prompt: {prompt}")
                 print(f"Aspect Ratio: {aspect_ratio}")
                 
-                # Add transparent template if available
-                if transparent_template:
-                    contents.append(transparent_template)
-                    print(f"Added transparent {aspect_ratio} template to guide dimensions")
-                
                 # Add all input images
                 contents.extend(pil_images)
             else:
@@ -243,11 +189,6 @@ class NanoBananaMultiInput:
                 print("Nano Banana Mode: Text-to-Image Generation")
                 print(f"Prompt: {prompt}")
                 print(f"Aspect Ratio: {aspect_ratio}")
-                
-                # Add transparent template if available
-                if transparent_template:
-                    contents.append(transparent_template)
-                    print(f"Using transparent {aspect_ratio} template to define output dimensions")
             
             print(f"Calling Google Gemini API with {len(contents)} content items...")
             
@@ -255,17 +196,28 @@ class NanoBananaMultiInput:
                 # Use image generation capabilities
                 print("Using image generation mode")
                 
-                # Generation configuration
+                # Generation configuration with aspect ratio
                 generation_config = {
                     "temperature": 0.4,
                     "top_p": 0.8,
                     "max_output_tokens": 8192,
                 }
                 
+                # Create the config object with aspect ratio if not passthrough
+                if aspect_ratio != "passthrough":
+                    config = types.GenerateContentConfig(
+                        **generation_config,
+                        image_config=types.ImageConfig(aspect_ratio=aspect_ratio)
+                    )
+                    print(f"Using aspect ratio configuration: {aspect_ratio}")
+                else:
+                    config = types.GenerateContentConfig(**generation_config)
+                    print("Using passthrough mode - no aspect ratio override")
+                
                 response = self.client.models.generate_content(
-                    model="gemini-2.5-flash-image-preview",
+                    model="gemini-2.5-flash-image",
                     contents=contents,
-                    config=types.GenerateContentConfig(**generation_config)
+                    config=config
                 )
                 
                 # Process image generation response
@@ -300,12 +252,8 @@ class NanoBananaMultiInput:
                     if input_images:
                         fallback_image = input_images[0]
                     else:
-                        # Default size based on aspect ratio template or 512x512
-                        if transparent_template:
-                            w, h = transparent_template.size
-                            fallback_image = torch.zeros(1, h, w, 3)
-                        else:
-                            fallback_image = torch.zeros(1, 512, 512, 3)
+                        # Default size 1024x1024 (matches API default)
+                        fallback_image = torch.zeros(1, 1024, 1024, 3)
                     return (fallback_image, f"{description_text}" if description_text else "No image generated")
             
             else:
@@ -316,22 +264,14 @@ class NanoBananaMultiInput:
                 if len(pil_images) > 0:
                     description_prompt = f"Analyze these {len(pil_images)} images and describe what this composition would look like: {prompt}"
                     
-                    # Add prompt and all images including template
+                    # Add prompt and all images
                     all_contents = [description_prompt]
-                    if transparent_template:
-                        all_contents.append(transparent_template)
                     all_contents.extend(pil_images)
                     
                     response = self.model.generate_content(all_contents)
                 else:
-                    # Text-only with possible template
-                    if transparent_template:
-                        response = self.model.generate_content([
-                            f"Describe an image with aspect ratio {aspect_ratio}: {prompt}",
-                            transparent_template
-                        ])
-                    else:
-                        response = self.model.generate_content(f"Describe in vivid detail an image: {prompt}")
+                    # Text-only
+                    response = self.model.generate_content(f"Describe in vivid detail an image with aspect ratio {aspect_ratio}: {prompt}")
                 
                 # Process text response
                 description_text = response.text if hasattr(response, 'text') else str(response)
@@ -342,13 +282,8 @@ class NanoBananaMultiInput:
                     print(f"Returning first of {len(input_images)} original images with description")
                     return (input_images[0], f"Description ({len(input_images)} images): {description_text}")
                 else:
-                    # Create placeholder based on aspect ratio
-                    if transparent_template:
-                        w, h = transparent_template.size
-                        placeholder = torch.full((1, h, w, 3), 0.9)
-                    else:
-                        placeholder = torch.full((1, 512, 512, 3), 0.9)
-                    
+                    # Create placeholder with default size
+                    placeholder = torch.full((1, 1024, 1024, 3), 0.9)
                     placeholder[:, :, :, 0] = 1.0  # Red channel
                     placeholder[:, :, :, 1] = 0.9  # Green channel  
                     placeholder[:, :, :, 2] = 0.3  # Blue channel
@@ -368,12 +303,12 @@ class NanoBananaMultiInput:
                     return (image_1, error_msg)
                 else:
                     # Create error placeholder
-                    error_image = torch.zeros(1, 512, 512, 3)
+                    error_image = torch.zeros(1, 1024, 1024, 3)
                     error_image[:, :, :, 0] = 0.8  # Reddish error color
                     return (error_image, error_msg)
             except:
                 # Ultimate fallback
-                black_image = torch.zeros(1, 512, 512, 3)
+                black_image = torch.zeros(1, 1024, 1024, 3)
                 return (black_image, error_msg)
 
 # Register the node
