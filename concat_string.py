@@ -18,8 +18,8 @@ class ConcatString(io.ComfyNode):
             category="klinter",
             description="Efficiently concatenates up to three strings",
             inputs=[
-                io.String.Input("string_a", default="", multiline=True, force_input=True),
-                io.String.Input("string_b", default="", multiline=True, force_input=True),
+                io.String.Input("string_a", default="", multiline=True),
+                io.String.Input("string_b", default="", multiline=True),
                 io.String.Input("string_c", default="", multiline=True),
             ],
             outputs=[

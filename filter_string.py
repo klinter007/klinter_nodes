@@ -18,9 +18,9 @@ class FilterString(io.ComfyNode):
             category="klinter",
             description="Check if a string exists in a wordlist and return either the safeword or original string",
             inputs=[
-                io.String.Input("in_question", default="", multiline=False, force_input=True),
-                io.String.Input("wordlist", default="", multiline=True, force_input=True),
-                io.String.Input("safeword", default="", multiline=True, force_input=True),
+                io.String.Input("in_question", default="", multiline=False),
+                io.String.Input("wordlist", default="", multiline=True),
+                io.String.Input("safeword", default="", multiline=True),
             ],
             outputs=[
                 io.String.Output()

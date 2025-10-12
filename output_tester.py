@@ -22,8 +22,8 @@ class OutputTester(io.ComfyNode):
             description="Accept any input type and report details for debugging",
             is_output_node=True,
             inputs=[
-                io.Custom("*").Input("input_value", force_input=True),
-                io.Custom("*").Input("optional_input", force_input=True, optional=True),
+                io.Custom("*").Input("input_value"),
+                io.Custom("*").Input("optional_input", optional=True),
             ],
             outputs=[
                 io.String.Output(display_name="type_info"),
