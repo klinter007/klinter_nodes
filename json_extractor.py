@@ -1,27 +1,34 @@
 import json
 import re
 from typing import Dict, Any, Tuple
+from comfy_api.latest import io
 
-class JsonExtractorKlinter:
+class JsonExtractorKlinter(io.ComfyNode):
     """Node that extracts a specified value from JSON input."""
 
-    def __init__(self):
-        pass
+    @classmethod
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the JSON extractor node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="Json Extractor - klinter",
+            display_name="Json Extractor - klinter",
+            category="utils/json",
+            description="Extract a specified value from JSON input",
+            inputs=[
+                io.String.Input("json_input", multiline=True),
+                io.String.Input("key_to_extract", default="enhanced_prompt"),
+            ],
+            outputs=[
+                io.String.Output()
+            ]
+        )
 
     @classmethod
-    def INPUT_TYPES(cls) -> Dict[str, Any]:
-        return {
-            "required": {
-                "json_input": ("STRING", {"multiline": True}),
-                "key_to_extract": ("STRING", {"default": "enhanced_prompt"})
-            }
-        }
-
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "extract_json_value"
-    CATEGORY = "utils/json"
-
-    def extract_json_value(self, json_input: str, key_to_extract: str) -> Tuple[str]:
+    def execute(cls, json_input: str, key_to_extract: str) -> io.NodeOutput:
         """Extract a specific value from JSON input.
 
         Args:
@@ -81,10 +88,10 @@ class JsonExtractorKlinter:
 
             # Return the value as string
             if isinstance(value, str):
-                return (value,)
+                return io.NodeOutput(value)
             else:
                 # Convert non-string values to JSON string representation
-                return (json.dumps(value, ensure_ascii=False),)
+                return io.NodeOutput(json.dumps(value, ensure_ascii=False))
         else:
             available_keys = list(data.keys()) if isinstance(data, dict) else []
             raise ValueError(f"Key '{key_to_extract}' not found in JSON structure. Available keys: {available_keys}")

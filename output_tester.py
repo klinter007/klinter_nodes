@@ -3,35 +3,37 @@
 import torch
 import numpy as np
 from PIL import Image
+from comfy_api.latest import io
 
-class OutputTester:
+class OutputTester(io.ComfyNode):
     """Node that accepts any input type and reports what it receives for debugging purposes."""
 
     @classmethod
-    def INPUT_TYPES(cls) -> dict:
-        """Define the input types for the output tester.
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the output tester node.
         
         Returns:
-            dict: Input type specifications for the node
+            io.Schema: Node schema with inputs and outputs
         """
-        return {
-            "required": {
-                # Accept ANY type using "*"
-                "input_value": ("*", {"forceInput": True}),
-            },
-            "optional": {
-                # Optional second input for testing multiple connections
-                "optional_input": ("*", {"forceInput": True}),
-            }
-        }
+        return io.Schema(
+            node_id="OutputTester",
+            display_name="Output Tester - klinter",
+            category="klinter",
+            description="Accept any input type and report details for debugging",
+            is_output_node=True,
+            inputs=[
+                io.Custom("*").Input("input_value", force_input=True),
+                io.Custom("*").Input("optional_input", force_input=True, optional=True),
+            ],
+            outputs=[
+                io.String.Output(display_name="type_info"),
+                io.String.Output(display_name="value_info"),
+                io.Custom("*").Output(display_name="passthrough")
+            ]
+        )
 
-    RETURN_TYPES = ("STRING", "STRING", "*")
-    RETURN_NAMES = ("type_info", "value_info", "passthrough")
-    OUTPUT_NODE = True
-    FUNCTION = "test_output"
-    CATEGORY = "klinter"
-
-    def test_output(self, input_value, optional_input=None):
+    @classmethod
+    def execute(cls, input_value, optional_input=None) -> io.NodeOutput:
         """Test and report the type and value of the input.
         
         Args:
@@ -43,13 +45,13 @@ class OutputTester:
         """
         
         # Main input analysis
-        type_info = self._analyze_type(input_value)
-        value_info = self._analyze_value(input_value)
+        type_info = cls._analyze_type(input_value)
+        value_info = cls._analyze_value(input_value)
         
         # If optional input is provided, analyze it too
         if optional_input is not None:
-            optional_type = self._analyze_type(optional_input)
-            optional_value = self._analyze_value(optional_input)
+            optional_type = cls._analyze_type(optional_input)
+            optional_value = cls._analyze_value(optional_input)
             type_info += f"\n\n[Optional Input]\n{optional_type}"
             value_info += f"\n\n[Optional Input]\n{optional_value}"
         
@@ -64,9 +66,10 @@ class OutputTester:
         print(value_info)
         print("="*50 + "\n")
         
-        return (type_info, value_info, input_value)
+        return io.NodeOutput(type_info, value_info, input_value)
     
-    def _analyze_type(self, value):
+    @classmethod
+    def _analyze_type(cls, value):
         """Analyze and return detailed type information about the value.
         
         Args:
@@ -142,7 +145,8 @@ class OutputTester:
         
         return "\n".join(info_lines)
     
-    def _analyze_value(self, value):
+    @classmethod
+    def _analyze_value(cls, value):
         """Analyze and return information about the value itself.
         
         Args:

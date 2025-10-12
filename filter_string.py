@@ -1,28 +1,34 @@
 """Node for filtering strings based on a wordlist in ComfyUI."""
 
-class FilterString:
+from comfy_api.latest import io
+
+class FilterString(io.ComfyNode):
     """Node for checking if a given string appears in a list of strings and returning a filter word if true."""
 
     @classmethod
-    def INPUT_TYPES(cls) -> dict:
-        """Define the input types for the filtering operation.
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the filtering node.
         
         Returns:
-            dict: Input type specifications for the node
+            io.Schema: Node schema with inputs and outputs
         """
-        return {
-            "required": {
-                "in_question": ("STRING", {"forceInput": True, "default": "", "multiline": False}),
-                "wordlist": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
-                "safeword": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
-            }
-        }
+        return io.Schema(
+            node_id="filter",
+            display_name="Filter String - klinter",
+            category="klinter",
+            description="Check if a string exists in a wordlist and return either the safeword or original string",
+            inputs=[
+                io.String.Input("in_question", default="", multiline=False, force_input=True),
+                io.String.Input("wordlist", default="", multiline=True, force_input=True),
+                io.String.Input("safeword", default="", multiline=True, force_input=True),
+            ],
+            outputs=[
+                io.String.Output()
+            ]
+        )
 
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "filter_string"
-    CATEGORY = "klinter"
-
-    def filter_string(self, in_question: str, wordlist: str, safeword: str) -> tuple[str]:
+    @classmethod
+    def execute(cls, in_question: str, wordlist: str, safeword: str) -> io.NodeOutput:
         """Check if a string exists in a wordlist and return either the safeword or original string.
         
         Args:
@@ -31,17 +37,18 @@ class FilterString:
             safeword: Word to return if in_question is found in wordlist
             
         Returns:
-            tuple[str]: Either safeword or in_question depending on if in_question is in wordlist
+            io.NodeOutput: Either safeword or in_question depending on if in_question is in wordlist
         """
         try:
             # Convert the wordlist string into a list of words
             words = wordlist.split()
             
             # Check if in_question is in the list of words
-            return (safeword,) if in_question in words else (in_question,)
+            result = safeword if in_question in words else in_question
+            return io.NodeOutput(result)
         except Exception as e:
             print(f"Error in filter_string: {str(e)}")
-            return (in_question,)
+            return io.NodeOutput(in_question)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

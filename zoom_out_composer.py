@@ -6,32 +6,41 @@ import torch.nn.functional as F
 from typing import Tuple
 from math import cos, pi
 from tqdm import tqdm
+from comfy_api.latest import io
 
-class ZoomOutComposer:
+class ZoomOutComposer(io.ComfyNode):
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "images": ("IMAGE",),
-                "zoom": ("FLOAT", {"default": 1.5, "min": 1.1, "max": 3.0, "step": 0.05}),
-                "frames_per_transition": ("INT", {"default": 24, "min": 1, "max": 120, "step": 1}),
-                "mode": (["zoom-out", "zoom-in", "zoom-out-in", "zoom-in-out"], {"default": "zoom-out"}),
-                "output_width": ("INT", {"default": 1024, "min": 16, "max": 8192, "step": 1}),
-                "output_height": ("INT", {"default": 1024, "min": 16, "max": 8192, "step": 1}),
-                "keep_aspect": ("BOOLEAN", {"default": True}),
-            }
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the zoom out composer node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="ZoomOutComposer",
+            display_name="Zoom Out Composer - klinter",
+            category="klinter",
+            description="Create a zoom-out effect transitioning between multiple images",
+            inputs=[
+                io.Image.Input("images"),
+                io.Float.Input("zoom", default=1.5, min=1.1, max=3.0, step=0.05),
+                io.Int.Input("frames_per_transition", default=24, min=1, max=120, step=1),
+                io.Combo.Input("mode", options=["zoom-out", "zoom-in", "zoom-out-in", "zoom-in-out"], default="zoom-out"),
+                io.Int.Input("output_width", default=1024, min=16, max=8192, step=1),
+                io.Int.Input("output_height", default=1024, min=16, max=8192, step=1),
+                io.Boolean.Input("keep_aspect", default=True),
+            ],
+            outputs=[
+                io.Image.Output(display_name="zoomed_frames")
+            ]
+        )
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("zoomed_frames",)
-    FUNCTION = "apply_zoom"
-    CATEGORY = "klinter"
-    NODE_COLOR = "#4B0082"  # Indigo color
-
-    def easeInOutSine(self, x: float) -> float:
+    @classmethod
+    def easeInOutSine(cls, x: float) -> float:
         return -(cos(pi * x) - 1) / 2
 
-    def process_frame(self, i: int,
+    @classmethod
+    def process_frame(cls, i: int,
                       images: torch.Tensor,
                       num_frames: int,
                       num_images: int,
@@ -44,7 +53,7 @@ class ZoomOutComposer:
         x = i / (num_frames - 1)
         
         # Easing value in [0, 1].
-        e = self.easeInOutSine(x)
+        e = cls.easeInOutSine(x)
 
         # Map easing to 0..(num_images-1).
         current_idx_f = e * (num_images - 1)  # if we have N images, indices are 0..N-1
@@ -70,14 +79,15 @@ class ZoomOutComposer:
 
         return zoomed.squeeze(0)
 
-    def apply_zoom(self,
+    @classmethod
+    def execute(cls,
                    images: torch.Tensor,
                    zoom: float = 1.5,
                    frames_per_transition: int = 24,
                    mode: str = "zoom-out",
                    output_width: int = 1024,
                    output_height: int = 1024,
-                   keep_aspect: bool = True) -> tuple[torch.Tensor]:
+                   keep_aspect: bool = True) -> io.NodeOutput:
 
         # If images come in [N, H, W, C], move to [N, C, H, W].
         if images.ndim == 4:
@@ -119,7 +129,7 @@ class ZoomOutComposer:
         # Generate frames using process_frame.
         frames = []
         for i in tqdm(range(num_frames), desc=f"Generating {mode} frames"):
-            frame = self.process_frame(i, images, num_frames, num_images, zoom)
+            frame = cls.process_frame(i, images, num_frames, num_images, zoom)
             frames.append(frame)
 
         # Stack them into [N, C, H, W].
@@ -142,7 +152,7 @@ class ZoomOutComposer:
 
         # Return in [N, H, W, C] format if ComfyUI or the subsequent node expects that.
         frames = frames.permute(0, 2, 3, 1)
-        return (frames,)
+        return io.NodeOutput(frames)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

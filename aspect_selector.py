@@ -1,9 +1,7 @@
 import random
+from comfy_api.latest import io
 
-class AspectSelector:
-    def __init__(self):
-        pass
-    
+class AspectSelector(io.ComfyNode):
     # Base ratios and their relative proportions
     BASE_RATIOS = {
         "1:1": (1.0, 1.0),
@@ -31,12 +29,22 @@ class AspectSelector:
         "1536": 1536
     }
     
-    def get_dimensions(self, base_size, ratio):
+    @classmethod
+    def get_dimensions(cls, base_size, ratio):
+        """Calculate dimensions for given base size and ratio.
+        
+        Args:
+            base_size: Selected base resolution key
+            ratio: Selected aspect ratio key
+            
+        Returns:
+            dict: Dictionary with width and height, or None if invalid
+        """
         if ratio == "---":
             return None
             
-        base = self.BASE_SIZES[base_size]
-        width_mult, height_mult = self.BASE_RATIOS[ratio]
+        base = cls.BASE_SIZES[base_size]
+        width_mult, height_mult = cls.BASE_RATIOS[ratio]
         
         # Calculate dimensions while maintaining the base size as the smaller dimension
         if width_mult >= height_mult:
@@ -56,36 +64,56 @@ class AspectSelector:
         }
     
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "base_resolution": (list(cls.BASE_SIZES.keys()), {"default": "1536"}),
-                "aspect_ratio": (list(cls.BASE_RATIOS.keys()),),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff})
-            }
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the aspect selector node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="AspectSelector",
+            display_name="Aspect Ratio Selector - klinter",
+            category="klinter",
+            description="Select aspect ratio and base resolution to calculate dimensions",
+            is_output_node=True,
+            inputs=[
+                io.Combo.Input("base_resolution", options=list(cls.BASE_SIZES.keys()), default="1536"),
+                io.Combo.Input("aspect_ratio", options=list(cls.BASE_RATIOS.keys())),
+                io.Int.Input("seed", default=0, min=0, max=0xffffffffffffffff),
+            ],
+            outputs=[
+                io.Int.Output(display_name="width"),
+                io.Int.Output(display_name="height"),
+                io.String.Output(display_name="name")
+            ]
+        )
 
-    RETURN_TYPES = ("INT", "INT", "STRING")
-    RETURN_NAMES = ("width", "height", "name")
-    FUNCTION = "return_res"
-    CATEGORY = "klinter"
-    OUTPUT_NODE = True
-
-    def return_res(self, base_resolution, aspect_ratio, seed):
+    @classmethod
+    def execute(cls, base_resolution, aspect_ratio, seed) -> io.NodeOutput:
+        """Calculate and return dimensions based on aspect ratio selection.
+        
+        Args:
+            base_resolution: Selected base resolution
+            aspect_ratio: Selected aspect ratio (or randomized if seed != 0)
+            seed: Random seed for ratio selection (0 = no randomization)
+            
+        Returns:
+            io.NodeOutput: Width, height, and aspect ratio name
+        """
         # If seed is not 0, use it to randomly select an aspect ratio
         if seed != 0:
             random.seed(seed)
-            valid_ratios = [ratio for ratio in self.BASE_RATIOS.keys() if ratio != "---"]
+            valid_ratios = [ratio for ratio in cls.BASE_RATIOS.keys() if ratio != "---"]
             aspect_ratio = random.choice(valid_ratios)
         
         # Calculate dimensions based on selected base resolution and ratio
-        selected_info = self.get_dimensions(base_resolution, aspect_ratio)
+        selected_info = cls.get_dimensions(base_resolution, aspect_ratio)
         if selected_info is None:
-            return (0, 0, "invalid")
+            return io.NodeOutput(0, 0, "invalid")
             
         width = selected_info["width"]
         height = selected_info["height"]
-        return (width, height, aspect_ratio)
+        return io.NodeOutput(width, height, aspect_ratio)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

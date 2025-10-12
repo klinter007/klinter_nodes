@@ -1,4 +1,6 @@
-"""ComfyUI node pack for string manipulation and utilities."""
+"""ComfyUI node pack for string manipulation and utilities - V3 Schema."""
+
+from comfy_api.latest import ComfyExtension, io
 
 # Import node classes from individual files
 from .concat_string import ConcatString
@@ -20,87 +22,63 @@ from .json_extractor import JsonExtractorKlinter
 from .save_audio_plus import SaveAudioPlus
 from .bbox_cropper import BBoxCropper
 from .output_tester import OutputTester
+from .flexible_batch_image import FlexibleBatchImage
 
-# Mapping of node identifiers to their respective class implementations
-NODE_CLASS_MAPPINGS = {
-    # String manipulation nodes
-    "concat": ConcatString,
-    "filter": FilterString,
-    "string_contact_multi": StringContactMulti,
-    "nodevalue2stringmulti": NodeValue2StringMulti,
+class KlinterNodesExtension(ComfyExtension):
+    """Extension providing custom nodes for ComfyUI."""
     
-    # Core nodes
-    "YellowBus": YellowBus,
-    
-    # Image processing nodes
-    "ZoomOutComposer": ZoomOutComposer,
-    "FolderLoader": FolderLoader,
-    "SizeSelector": SizeSelector,
-    "LoadImagePlus": LoadImagePlusKlinter,
-    "AspectSelector": AspectSelector,
-    "SpeedRamp": SpeedRampNode,
-    "OutpaintPadding": OutpaintPadding,
-    "BBoxCropper": BBoxCropper,
-    
-    # Video processing nodes
-    "LoadVideoForExtendingKlinter": LoadVideoForExtending,
-    "PrepVideoForExtendKlinter": PrepVideoForExtend,
-    "VideoFromFolder": VideoFromFolder,
-    
-    # AI Image Generation nodes
-    "NanoBananaMultiInput": NanoBananaMultiInput,
-    
-    # JSON processing nodes
-    "Json Extractor - klinter": JsonExtractorKlinter,
-    
-    # Audio processing nodes
-    "SaveAudioPlus": SaveAudioPlus,
-    
-    # Debug and testing nodes
-    "OutputTester": OutputTester
-}
+    async def get_node_list(self) -> list[type[io.ComfyNode]]:
+        """Return list of all nodes provided by this extension.
+        
+        Returns:
+            list: All ComfyNode classes in this extension
+        """
+        return [
+            # String manipulation nodes
+            ConcatString,
+            FilterString,
+            StringContactMulti,
+            NodeValue2StringMulti,
+            
+            # Core utility nodes
+            YellowBus,
+            
+            # Image processing nodes
+            ZoomOutComposer,
+            FolderLoader,
+            SizeSelector,
+            LoadImagePlusKlinter,
+            AspectSelector,
+            OutpaintPadding,
+            BBoxCropper,
+            FlexibleBatchImage,
+            
+            # Video processing nodes
+            LoadVideoForExtending,
+            PrepVideoForExtend,
+            VideoFromFolder,
+            SpeedRampNode,
+            
+            # AI Image Generation nodes
+            NanoBananaMultiInput,
+            
+            # JSON processing nodes
+            JsonExtractorKlinter,
+            
+            # Audio processing nodes
+            SaveAudioPlus,
+            
+            # Debug and testing nodes
+            OutputTester,
+        ]
 
-# Mapping of node identifiers to their display names for UI or logging purposes
-NODE_DISPLAY_NAME_MAPPINGS = {
-    # String manipulation nodes
-    "concat": "Concat String - klinter",
-    "filter": "Filter String - klinter",
-    "string_contact_multi": "String Contact Multi - klinter",
-    "nodevalue2stringmulti": "Node Value to String Multi - klinter",
+async def comfy_entrypoint() -> KlinterNodesExtension:
+    """ComfyUI V3 entry point for registering nodes.
     
-    # Core nodes
-    "YellowBus": "Yellow Bus - klinter",
-    
-    # Image processing nodes
-    "ZoomOutComposer": "Zoom Out Composer - klinter",
-    "FolderLoader": "Folder Loader - klinter",
-    "SizeSelector": "Size Selector - klinter",
-    "LoadImagePlus": "Load Image Plus - klinter",
-    "AspectSelector": "Aspect Selector - klinter",
-    "SpeedRamp": "Speed Ramp - klinter",
-    "OutpaintPadding": "Outpaint Padding - Klinter",
-    "BBoxCropper": "BBox Cropper - klinter",
-    
-    # Video processing nodes
-    "LoadVideoForExtendingKlinter": "Load Video For Extending - Klinter",
-    "PrepVideoForExtendKlinter": "Prep Video For Extend - Klinter",
-    "VideoFromFolder": "Video From Folder - Klinter",
-    
-    # AI Image Generation nodes
-    "NanoBananaMultiInput": "Nano Banana Multi Input - Klinter",
-    
-    # JSON processing nodes
-    "Json Extractor - klinter": "Json Extractor - klinter",
-    
-    # Audio processing nodes
-    "SaveAudioPlus": "Save Audio+ - Klinter",
-    
-    # Debug and testing nodes
-    "OutputTester": "Output Tester - klinter"
-}
-
-# Define what symbols this module exports
-__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
+    Returns:
+        KlinterNodesExtension: Extension instance with all nodes
+    """
+    return KlinterNodesExtension()
 
 # Add this section to specify the location of JavaScript files
 WEB_DIRECTORY = "./js"
@@ -116,3 +94,6 @@ WEB_EXTENSIONS = [
     "string_contact_multi.js",
     "video_upload.js"
 ]
+
+# Define what symbols this module exports
+__all__ = ['comfy_entrypoint', 'KlinterNodesExtension', 'WEB_DIRECTORY', 'WEB_EXTENSIONS']

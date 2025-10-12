@@ -9,8 +9,9 @@ Outputs:
 
 import torch
 import torch.nn.functional as F
+from comfy_api.latest import io
 
-class OutpaintPadding:
+class OutpaintPadding(io.ComfyNode):
     """
     This node adds padding around an image for outpainting purposes.
     It returns four outputs:
@@ -23,29 +24,33 @@ class OutpaintPadding:
     upscale_methods = ["nearest-exact", "bilinear", "area", "bicubic", "lanczos"]
     
     @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "zoom_factor": (["1.25x", "1.5x", "2.0x"],),
-                "mask_feather": ("INT", {
-                    "default": 40,
-                    "min": 0,
-                    "max": 100,
-                    "step": 1,
-                }),
-                "upscale_method": (s.upscale_methods,),
-            },
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the outpaint padding node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="OutpaintPadding",
+            display_name="Outpaint Padding - Klinter",
+            category="klinter",
+            description="Add padding around images for outpainting effects with corresponding masks",
+            inputs=[
+                io.Image.Input("image"),
+                io.Combo.Input("zoom_factor", options=["1.25x", "1.5x", "2.0x"]),
+                io.Int.Input("mask_feather", default=40, min=0, max=100, step=1),
+                io.Combo.Input("upscale_method", options=cls.upscale_methods),
+            ],
+            outputs=[
+                io.Image.Output(display_name="padded_image"),
+                io.Mask.Output(display_name="padded_mask"),
+                io.Image.Output(display_name="zoomed out image"),
+                io.Mask.Output(display_name="zoomed out mask")
+            ]
+        )
 
-    # Updated outputs: padded_image, padded_mask, zoomed out image, zoomed out mask.
-    RETURN_TYPES = ("IMAGE", "MASK", "IMAGE", "MASK")
-    RETURN_NAMES = ("padded_image", "padded_mask", "zoomed out image", "zoomed out mask")
-    FUNCTION = "expand_image"
-    CATEGORY = "klinter"
-    NODE_COLOR = "#32CD32"  # Lime Green
-
-    def expand_image(self, image, zoom_factor, mask_feather, upscale_method):
+    @classmethod
+    def execute(cls, image, zoom_factor, mask_feather, upscale_method) -> io.NodeOutput:
         zoom = float(zoom_factor.replace('x', ''))
         B, H, W, C = image.shape
         new_width = int(W * zoom)
@@ -94,7 +99,7 @@ class OutpaintPadding:
         zoomed_mask_tensor = F.interpolate(mask_tensor, size=(H, W), mode="bicubic", align_corners=False)
         zoomed_out_mask = zoomed_mask_tensor.squeeze(1)  # [B, H, W]
 
-        return padded_image, new_mask, zoomed_out_image, zoomed_out_mask
+        return io.NodeOutput(padded_image, new_mask, zoomed_out_image, zoomed_out_mask)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

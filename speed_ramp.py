@@ -1,30 +1,41 @@
 import numpy as np
 import torch
 from scipy.interpolate import interp1d
+from comfy_api.latest import io
 
-class SpeedRampNode:
+class SpeedRampNode(io.ComfyNode):
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "frames": ("IMAGE",),
-                "use_preset": ("BOOLEAN", {"default": True}),
-                "preset_curve": (["double_peak", "quad_burst"],),
-                "base_fps": ("INT", {"default": 30, "min": 1, "max": 120}),
-                "speed_values": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 10.0}),
-            }
-        }
-    
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "apply_speed_ramp"
-    CATEGORY = "video"
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the speed ramp node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="SpeedRamp",
+            display_name="Speed Ramp - klinter",
+            category="video",
+            description="Apply speed ramp effects to video frames",
+            inputs=[
+                io.Image.Input("frames"),
+                io.Boolean.Input("use_preset", default=True),
+                io.Combo.Input("preset_curve", options=["double_peak", "quad_burst"]),
+                io.Int.Input("base_fps", default=30, min=1, max=120),
+                io.Float.Input("speed_values", default=1.0, min=0.1, max=10.0),
+            ],
+            outputs=[
+                io.Image.Output()
+            ]
+        )
 
-    def _create_speed_curve(self, speeds, num_frames):
+    @classmethod
+    def _create_speed_curve(cls, speeds, num_frames):
         x = np.linspace(0, 1, len(speeds))
         curve = interp1d(x, speeds, kind='cubic', bounds_error=False, fill_value=(speeds[0], speeds[-1]))
         return curve(np.linspace(0, 1, num_frames))
 
-    def apply_speed_ramp(self, frames, use_preset, preset_curve, base_fps, speed_values):
+    @classmethod
+    def execute(cls, frames, use_preset, preset_curve, base_fps, speed_values) -> io.NodeOutput:
         # Convert frames to tensor if it isn't already
         if not isinstance(frames, torch.Tensor):
             frames = torch.stack(frames)
@@ -43,7 +54,7 @@ class SpeedRampNode:
         
         # Calculate new frame positions
         total_frames = len(frames)
-        frame_speeds = self._create_speed_curve(speeds, total_frames)
+        frame_speeds = cls._create_speed_curve(speeds, total_frames)
         
         # Calculate cumulative time
         cumulative_time = np.cumsum(1.0 / frame_speeds)
@@ -66,4 +77,4 @@ class SpeedRampNode:
         # Create new tensor with proper temporal order
         new_frames = torch.stack([frames[i] for i in new_positions])
         
-        return (new_frames,)
+        return io.NodeOutput(new_frames)

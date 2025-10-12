@@ -6,6 +6,7 @@ import torch
 import numpy as np
 from PIL import Image
 from typing import Optional, Tuple, Any
+from comfy_api.latest import io as comfy_io
 
 # Try to import Google GenAI client for image generation
 try:
@@ -24,7 +25,7 @@ except ImportError:
         USE_IMAGE_GENERATION = False
         print("No Google AI library found. Install with: pip install google-genai")
 
-class NanoBananaMultiInput:
+class NanoBananaMultiInput(comfy_io.ComfyNode):
     """
     Nano Banana Multi Input - Multiple image editing and composition with aspect ratio control
     
@@ -33,54 +34,56 @@ class NanoBananaMultiInput:
     for creating and editing images using Google's state-of-the-art Gemini model.
     """
     
+    # Class-level state (since V3 nodes are stateless)
+    _api_key = None
+    _model = None
+    _client = None
+    _initialized = False
+    
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "prompt": ("STRING", {
-                    "multiline": True, 
-                    "default": "Create a beautiful landscape with mountains and a lake",
-                    "placeholder": "Describe the image you want..."
-                }),
-            },
-            "optional": {
-                "image_1": ("IMAGE",),
-                "image_2": ("IMAGE",),
-                "image_3": ("IMAGE",),
-                "image_4": ("IMAGE",),
-                "image_5": ("IMAGE",),
-                "aspect_ratio": (["passthrough", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"], {
-                    "default": "passthrough"
-                }),
-                "api_key": ("STRING", {
-                    "default": "",
-                    "placeholder": "Optional: Override environment API key"
-                }),
-            }
-        }
-    
-    RETURN_TYPES = ("IMAGE", "STRING")
-    RETURN_NAMES = ("generated_image", "description")
-    FUNCTION = "process_images"
-    CATEGORY = "klinter"
-    NODE_COLOR = "#FFEB3B"  # Yellow for nano banana
-    
-    def __init__(self):
-        # Get Gemini API key from environment variable (no hardcoding!)
-        self.api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
-        if not self.api_key:
-            print("WARNING: GEMINI_API_KEY or GOOGLE_API_KEY environment variable not found.")
-            print("Please set it in your environment or provide via node input!")
+    def define_schema(cls) -> comfy_io.Schema:
+        """Define the schema for the nano banana multi input node.
         
-        # Initialize Gemini client if available
-        self.model = None
-        self.client = None
-        self.init_client()
+        Returns:
+            comfy_io.Schema: Node schema with inputs and outputs
+        """
+        return comfy_io.Schema(
+            node_id="NanoBananaMultiInput",
+            display_name="Nano Banana Multi Input - Klinter",
+            category="klinter",
+            description="Multi-image generation with Google Gemini API and aspect ratio control",
+            inputs=[
+                comfy_io.String.Input("prompt", 
+                    multiline=True,
+                    default="Create a beautiful landscape with mountains and a lake"
+                ),
+                comfy_io.Image.Input("image_1", optional=True),
+                comfy_io.Image.Input("image_2", optional=True),
+                comfy_io.Image.Input("image_3", optional=True),
+                comfy_io.Image.Input("image_4", optional=True),
+                comfy_io.Image.Input("image_5", optional=True),
+                comfy_io.Combo.Input("aspect_ratio", 
+                    options=["passthrough", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"],
+                    default="passthrough",
+                    optional=True
+                ),
+                comfy_io.String.Input("api_key", default="", optional=True),
+            ],
+            outputs=[
+                comfy_io.Image.Output(display_name="generated_image"),
+                comfy_io.String.Output(display_name="description")
+            ]
+        )
     
-    def init_client(self, api_key=None):
+    @classmethod
+    def init_client(cls, api_key=None):
         """Initialize the Gemini client with the provided or environment API key"""
-        # Use provided API key or fall back to environment variable
-        key_to_use = api_key if api_key else self.api_key
+        # Get API key from environment if not provided
+        if not cls._api_key:
+            cls._api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+        
+        # Use provided API key or fall back to stored/environment key
+        key_to_use = api_key if api_key else cls._api_key
         
         if not key_to_use:
             print("No API key available for initialization")
@@ -90,21 +93,24 @@ class NanoBananaMultiInput:
             try:
                 if USE_IMAGE_GENERATION:
                     # Use Google GenAI for image generation
-                    self.client = genai.Client(api_key=key_to_use)
+                    cls._client = genai.Client(api_key=key_to_use)
                     print("Nano Banana Multi Input: Image generation client initialized successfully!")
+                    cls._initialized = True
                     return True
                 else:
                     # Use Google Generative AI for text only
                     genai.configure(api_key=key_to_use)
-                    self.model = genai.GenerativeModel('gemini-1.5-flash')
+                    cls._model = genai.GenerativeModel('gemini-1.5-flash')
                     print("Nano Banana Multi Input: Text model initialized (text-only mode)!")
+                    cls._initialized = True
                     return True
             except Exception as e:
                 print(f"Failed to initialize Nano Banana Multi Input client: {e}")
                 return False
         return False
     
-    def tensor_to_pil(self, tensor):
+    @classmethod
+    def tensor_to_pil(cls, tensor):
         """Convert ComfyUI tensor to PIL Image"""
         # ComfyUI tensors are in format [batch, height, width, channels] with values 0-1
         if tensor.dim() == 4:
@@ -125,7 +131,8 @@ class NanoBananaMultiInput:
         pil_image = Image.fromarray(tensor)
         return pil_image
     
-    def pil_to_tensor(self, pil_image):
+    @classmethod
+    def pil_to_tensor(cls, pil_image):
         """Convert PIL Image to ComfyUI tensor"""
         # Convert PIL to numpy array
         np_image = np.array(pil_image).astype(np.float32) / 255.0
@@ -134,15 +141,15 @@ class NanoBananaMultiInput:
         tensor = torch.from_numpy(np_image).unsqueeze(0)
         return tensor
     
-    
-    def process_images(self, prompt: str, 
+    @classmethod
+    def execute(cls, prompt: str, 
                       image_1: Optional[torch.Tensor] = None,
                       image_2: Optional[torch.Tensor] = None, 
                       image_3: Optional[torch.Tensor] = None,
                       image_4: Optional[torch.Tensor] = None,
                       image_5: Optional[torch.Tensor] = None,
                       aspect_ratio: str = "passthrough",
-                      api_key: str = "") -> Tuple[torch.Tensor, str]:
+                      api_key: str = "") -> comfy_io.NodeOutput:
         """
         Create or edit images using Google Gemini API with support for up to 5 input images
         and built-in aspect ratio configuration via the API
@@ -151,14 +158,17 @@ class NanoBananaMultiInput:
             # Check if a custom API key was provided
             if api_key and api_key.strip():
                 print("Using custom API key provided via node input")
-                if not self.init_client(api_key.strip()):
+                if not cls.init_client(api_key.strip()):
                     raise ValueError("Failed to initialize client with provided API key")
+            elif not cls._initialized:
+                # Initialize with environment key
+                cls.init_client()
             
             # Validate prerequisites
             if not GOOGLE_GENAI_AVAILABLE:
                 raise ValueError("Google AI library not installed. Install with: pip install google-genai")
             
-            if not (self.model or self.client):
+            if not (cls._model or cls._client):
                 raise ValueError("Nano Banana Multi Input not initialized. Please provide API key via input or set GEMINI_API_KEY environment variable.")
             
             # Collect all provided images
@@ -167,7 +177,7 @@ class NanoBananaMultiInput:
             
             for i, img in enumerate([image_1, image_2, image_3, image_4, image_5], 1):
                 if img is not None:
-                    pil_img = self.tensor_to_pil(img)
+                    pil_img = cls.tensor_to_pil(img)
                     input_images.append(img)
                     pil_images.append(pil_img)
                     print(f"Input image {i} loaded: {pil_img.size}")
@@ -192,7 +202,7 @@ class NanoBananaMultiInput:
             
             print(f"Calling Google Gemini API with {len(contents)} content items...")
             
-            if USE_IMAGE_GENERATION and self.client:
+            if USE_IMAGE_GENERATION and cls._client:
                 # Use image generation capabilities
                 print("Using image generation mode")
                 
@@ -214,7 +224,7 @@ class NanoBananaMultiInput:
                     config = types.GenerateContentConfig(**generation_config)
                     print("Using passthrough mode - no aspect ratio override")
                 
-                response = self.client.models.generate_content(
+                response = cls._client.models.generate_content(
                     model="gemini-2.5-flash-image",
                     contents=contents,
                     config=config
@@ -238,7 +248,7 @@ class NanoBananaMultiInput:
                                 pil_result = Image.open(io.BytesIO(image_data))
                                 
                                 # Convert to tensor
-                                tensor = self.pil_to_tensor(pil_result)
+                                tensor = cls.pil_to_tensor(pil_result)
                                 generated_images.append(tensor)
                                 print(f"Generated image size: {pil_result.size}")
                 
@@ -246,7 +256,7 @@ class NanoBananaMultiInput:
                     # Return generated images
                     final_tensor = torch.cat(generated_images, dim=0)
                     print("Image generation completed successfully!")
-                    return (final_tensor, f"{description_text}" if description_text else "Image created successfully!")
+                    return comfy_io.NodeOutput(final_tensor, f"{description_text}" if description_text else "Image created successfully!")
                 else:
                     # Fallback if no images generated
                     if input_images:
@@ -254,7 +264,7 @@ class NanoBananaMultiInput:
                     else:
                         # Default size 1024x1024 (matches API default)
                         fallback_image = torch.zeros(1, 1024, 1024, 3)
-                    return (fallback_image, f"{description_text}" if description_text else "No image generated")
+                    return comfy_io.NodeOutput(fallback_image, f"{description_text}" if description_text else "No image generated")
             
             else:
                 # Use text-only mode as fallback
@@ -268,10 +278,10 @@ class NanoBananaMultiInput:
                     all_contents = [description_prompt]
                     all_contents.extend(pil_images)
                     
-                    response = self.model.generate_content(all_contents)
+                    response = cls._model.generate_content(all_contents)
                 else:
                     # Text-only
-                    response = self.model.generate_content(f"Describe in vivid detail an image with aspect ratio {aspect_ratio}: {prompt}")
+                    response = cls._model.generate_content(f"Describe in vivid detail an image with aspect ratio {aspect_ratio}: {prompt}")
                 
                 # Process text response
                 description_text = response.text if hasattr(response, 'text') else str(response)
@@ -280,7 +290,7 @@ class NanoBananaMultiInput:
                 # Return original image(s) or placeholder with description
                 if len(input_images) > 0:
                     print(f"Returning first of {len(input_images)} original images with description")
-                    return (input_images[0], f"Description ({len(input_images)} images): {description_text}")
+                    return comfy_io.NodeOutput(input_images[0], f"Description ({len(input_images)} images): {description_text}")
                 else:
                     # Create placeholder with default size
                     placeholder = torch.full((1, 1024, 1024, 3), 0.9)
@@ -289,7 +299,7 @@ class NanoBananaMultiInput:
                     placeholder[:, :, :, 2] = 0.3  # Blue channel
                     
                     print("Generated placeholder with description")
-                    return (placeholder, f"Generated description: {description_text}")
+                    return comfy_io.NodeOutput(placeholder, f"Generated description: {description_text}")
         
         except Exception as e:
             error_msg = f"Nano Banana Multi Input Error: {str(e)}"
@@ -298,18 +308,18 @@ class NanoBananaMultiInput:
             # Return fallback image
             try:
                 if 'input_images' in locals() and len(input_images) > 0:
-                    return (input_images[0], error_msg)
+                    return comfy_io.NodeOutput(input_images[0], error_msg)
                 elif image_1 is not None:
-                    return (image_1, error_msg)
+                    return comfy_io.NodeOutput(image_1, error_msg)
                 else:
                     # Create error placeholder
                     error_image = torch.zeros(1, 1024, 1024, 3)
                     error_image[:, :, :, 0] = 0.8  # Reddish error color
-                    return (error_image, error_msg)
+                    return comfy_io.NodeOutput(error_image, error_msg)
             except:
                 # Ultimate fallback
                 black_image = torch.zeros(1, 1024, 1024, 3)
-                return (black_image, error_msg)
+                return comfy_io.NodeOutput(black_image, error_msg)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

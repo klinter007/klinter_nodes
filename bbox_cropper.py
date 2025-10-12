@@ -2,48 +2,46 @@ import torch
 import numpy as np
 from PIL import Image
 import json
+from comfy_api.latest import io
 
-# Make sure this class name matches the one used in MAPPINGS at the bottom
-class BBoxCropper:
+class BBoxCropper(io.ComfyNode):
     """
     A ComfyUI node to crop multiple regions from an input image based on bounding box data.
     Declares input as STRING to satisfy validator when upstream node declares JSON/STRING.
     Internally parses the JSON string input.
     Ensures all output crops are padded to the same size using a WHITE background.
     """
-    def __init__(self):
-        pass
 
     @classmethod
-    def INPUT_TYPES(cls):
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the BBox cropper node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
         """
-        Defines the input types for the node.
-        Declaring bbox_data as STRING.
-        """
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                # Declaring STRING type declaration
-                "bbox_data": ("STRING", {
-                    "multiline": True,
-                    "default": '[{"bboxes": [[10, 10, 100, 100]], "labels": ["example"]}]'
-                }),
-                "padding": ("INT", {
-                    "default": 0,
-                    "min": 0,
-                    "max": 200,
-                    "step": 1
-                }),
-            },
-        }
-
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING")
-    RETURN_NAMES = ("CROPPED_IMAGES", "CROPPED_LABELS", "USED_BBOXES")
-    FUNCTION = "crop"
-    CATEGORY = "Image/Processing" # Or your preferred category
+        return io.Schema(
+            node_id="BBoxCropper",
+            display_name="BBox Cropper - klinter",
+            category="Image/Processing",
+            description="Crop multiple regions from an input image based on bounding box data",
+            inputs=[
+                io.Image.Input("image"),
+                io.String.Input("bbox_data", 
+                    multiline=True,
+                    default='[{"bboxes": [[10, 10, 100, 100]], "labels": ["example"]}]'
+                ),
+                io.Int.Input("padding", default=0, min=0, max=200, step=1),
+            ],
+            outputs=[
+                io.Image.Output(display_name="CROPPED_IMAGES"),
+                io.String.Output(display_name="CROPPED_LABELS"),
+                io.String.Output(display_name="USED_BBOXES")
+            ]
+        )
 
     # --- tensor_to_pil and pil_to_tensor methods remain the same ---
-    def tensor_to_pil(self, tensor):
+    @classmethod
+    def tensor_to_pil(cls, tensor):
         if tensor.ndim == 3: tensor = tensor.unsqueeze(0)
         images = []
         for i in range(tensor.shape[0]):
@@ -57,7 +55,8 @@ class BBoxCropper:
             else: print(f"Warning: tensor_to_pil unexpected channels: {img_np.shape[2]}. Skipping.")
         return images
 
-    def pil_to_tensor(self, pil_images):
+    @classmethod
+    def pil_to_tensor(cls, pil_images):
         if not pil_images:
             print("Warning: No images provided to pil_to_tensor.")
             return torch.zeros((1, 1, 1, 3), dtype=torch.float32)
@@ -98,8 +97,9 @@ class BBoxCropper:
         return output_tensor
     # --- ---
 
-    # Input 'bbox_data' is expected to be a string due to INPUT_TYPES declaration
-    def crop(self, image: torch.Tensor, bbox_data: str, padding: int):
+    # Input 'bbox_data' is expected to be a string due to define_schema declaration
+    @classmethod
+    def execute(cls, image: torch.Tensor, bbox_data: str, padding: int) -> io.NodeOutput:
         """
         Crops the input image based on bounding box data provided as a JSON string.
         Pads output crops with WHITE.
@@ -137,18 +137,21 @@ class BBoxCropper:
              print(f"!!! Error: Invalid JSON string received in bbox_data: {json_e}")
              debug_str = bbox_data[:500] + ('...' if len(bbox_data) > 500 else '')
              print(f"Received string (start): {debug_str}")
-             return (torch.zeros((1, 64, 64, 3), dtype=torch.float32), "[]", "[]") # Return placeholder
+             placeholder = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
+             return io.NodeOutput(placeholder, "[]", "[]")
         except (ValueError, TypeError, AttributeError, Exception) as e:
             print(f"!!! Error processing bbox_data input: {e}")
-            return (torch.zeros((1, 64, 64, 3), dtype=torch.float32), "[]", "[]") # Return placeholder
+            placeholder = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
+            return io.NodeOutput(placeholder, "[]", "[]")
 
         # --- Cropping Logic ---
         if image.shape[0] > 1: print(f"Warning: Input has {image.shape[0]} images. Processing first.")
 
-        pil_images = self.tensor_to_pil(image[0:1])
+        pil_images = cls.tensor_to_pil(image[0:1])
         if not pil_images:
              print("!!! Error: Could not convert input tensor to PIL image.")
-             return (torch.zeros((1, 64, 64, 3), dtype=torch.float32), "[]", "[]")
+             placeholder = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
+             return io.NodeOutput(placeholder, "[]", "[]")
 
         source_pil_image = pil_images[0]
         img_width, img_height = source_pil_image.size
@@ -182,8 +185,8 @@ class BBoxCropper:
             except Exception as e: print(f"!!! Error cropping bbox at index {i} ({bbox}): {e}")
 
         print(f"Successfully prepared {len(cropped_pil_images)} images for tensor conversion.") # Log
-        output_tensor = self.pil_to_tensor(cropped_pil_images)
+        output_tensor = cls.pil_to_tensor(cropped_pil_images)
         labels_json = json.dumps(cropped_labels_list)
         bboxes_json = json.dumps(used_bboxes_list)
 
-        return (output_tensor, labels_json, bboxes_json)
+        return io.NodeOutput(output_tensor, labels_json, bboxes_json)

@@ -2,26 +2,33 @@ import os
 from PIL import Image
 import torch
 import numpy as np
+from comfy_api.latest import io
 
-class FolderLoader:
+class FolderLoader(io.ComfyNode):
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "folder_path": ("STRING", {"default": ""}),
-            },
-            "optional": {
-                "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
-                "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
-            }
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the folder loader node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="FolderLoader",
+            display_name="Folder Loader - klinter",
+            category="klinter",
+            description="Load images from a folder",
+            inputs=[
+                io.String.Input("folder_path", default=""),
+                io.Int.Input("image_load_cap", default=0, min=0, step=1, optional=True),
+                io.Int.Input("start_index", default=0, min=0, step=1, optional=True),
+            ],
+            outputs=[
+                io.Image.Output(display_name="images")
+            ]
+        )
     
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
-    FUNCTION = "load_images"
-    CATEGORY = "klinter"
-    NODE_COLOR = "#4169E1"  # Royal Blue
-    def load_images(self, folder_path: str, image_load_cap: int = 0, start_index: int = 0) -> tuple[torch.Tensor, ...]:
+    @classmethod
+    def execute(cls, folder_path: str, image_load_cap: int = 0, start_index: int = 0) -> io.NodeOutput:
         if not os.path.isdir(folder_path):
             raise FileNotFoundError(f"Folder '{folder_path}' cannot be found.")
         
@@ -49,7 +56,7 @@ class FolderLoader:
             img_tensor = torch.from_numpy(np.array(img).astype(np.float32) / 255.0)
             images.append(img_tensor)
 
-        return (torch.stack(images),)
+        return io.NodeOutput(torch.stack(images))
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

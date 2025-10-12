@@ -3,14 +3,15 @@ Node Value to String Nodes
 Provides both multi-input and single-input nodes for converting node values to formatted strings.
 """
 
+from comfy_api.latest import io
+
 class NodeValue2StringBase:
     """Base class for node value to string conversion."""
     
     TEMPLATE = "{name}:{value}"
-    CATEGORY = "string"
-    OUTPUT_NODE = True
 
-    def get_node_title(self, value):
+    @classmethod
+    def get_node_title(cls, value):
         """
         Attempt to extract the node's title or type from the input value.
         
@@ -39,7 +40,8 @@ class NodeValue2StringBase:
             # If all else fails, return a generic name
             return "Unknown Node"
 
-    def get_node_value(self, value):
+    @classmethod
+    def get_node_value(cls, value):
         """
         Format different types of values consistently.
         
@@ -61,21 +63,32 @@ class NodeValue2StringBase:
             return str(value)
 
 
-class NodeValue2StringMulti(NodeValue2StringBase):
+class NodeValue2StringMulti(io.ComfyNode, NodeValue2StringBase):
     """A node that formats multiple input values with their source node names."""
     
     @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "inputcount": ("INT", {"default": 2, "min": 1, "max": 1000, "step": 1}),
-            }
-        }
-    
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "format_node_values"
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the node value to string multi node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="nodevalue2stringmulti",
+            display_name="Node Value to String Multi - klinter",
+            category="string",
+            description="Format multiple input values with their source node names",
+            is_output_node=True,
+            inputs=[
+                io.Int.Input("inputcount", default=2, min=1, max=1000, step=1),
+            ],
+            outputs=[
+                io.String.Output()
+            ]
+        )
 
-    def format_node_values(self, inputcount, **kwargs):
+    @classmethod
+    def execute(cls, inputcount, **kwargs) -> io.NodeOutput:
         """
         Format node values with their source node names.
         
@@ -84,7 +97,7 @@ class NodeValue2StringMulti(NodeValue2StringBase):
             **kwargs: Dynamic input values
         
         Returns:
-            tuple: Formatted string result
+            io.NodeOutput: Formatted string result
         """
         # Collect and format all connected values
         formatted_strings = []
@@ -97,21 +110,21 @@ class NodeValue2StringMulti(NodeValue2StringBase):
                 value = kwargs[key]
                 
                 # Get node title for the input
-                node_title = self.get_node_title(value)
+                node_title = cls.get_node_title(value)
                 
                 # Format the value
-                formatted_value = self.get_node_value(value)
+                formatted_value = cls.get_node_value(value)
                 
                 # Create formatted string
                 try:
-                    formatted = self.TEMPLATE.format(name=node_title, value=formatted_value)
+                    formatted = cls.TEMPLATE.format(name=node_title, value=formatted_value)
                     formatted_strings.append(formatted)
                 except Exception as e:
                     formatted_strings.append(f"Error formatting input {i}: {str(e)}")
         
         # Join all formatted strings with newline
         result = "\n".join(formatted_strings)
-        return (result,)
+        return io.NodeOutput(result)
 
 
 # Register the nodes

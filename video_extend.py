@@ -6,24 +6,34 @@ import torch
 from shutil import copyfile
 import folder_paths
 from comfy.utils import ProgressBar
+from comfy_api.latest import io
 
 UPLOAD_FOLDER = folder_paths.get_input_directory()
 
-class LoadVideoForExtending:
+class LoadVideoForExtending(io.ComfyNode):
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "video": ("VIDEO",),  # Special upload type that will be handled by the frontend
-            }
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the load video node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="LoadVideoForExtendingKlinter",
+            display_name="Load Video For Extending - Klinter",
+            category="Klinter",
+            description="Load a video and extract frames for extending",
+            inputs=[
+                io.Custom("VIDEO").Input("video"),  # Special upload type
+            ],
+            outputs=[
+                io.Image.Output(display_name="frames"),
+                io.Custom("TUPLE").Output(display_name="video_info")
+            ]
+        )
 
-    RETURN_TYPES = ("IMAGE", "TUPLE")  # frames tensor and video info tuple
-    RETURN_NAMES = ("frames", "video_info")
-    FUNCTION = "load_video"
-    CATEGORY = "Klinter"
-
-    def _get_video_info(self, video_path: str) -> dict:
+    @classmethod
+    def _get_video_info(cls, video_path: str) -> dict:
         """Get video information using ffprobe.
         
         Args:
@@ -106,7 +116,8 @@ class LoadVideoForExtending:
             return "Video file not found: {}".format(video)
         return True
 
-    def load_video(self, video: str):
+    @classmethod
+    def execute(cls, video: str) -> io.NodeOutput:
         """Load video and convert to tensor of frames.
         
         Args:
@@ -162,26 +173,34 @@ class LoadVideoForExtending:
             raise ValueError("No frames could be extracted from the video")
 
         video_info = (info['fps'], info['width'], info['height'], info['duration'])
-        return (torch.stack(frames), video_info)
+        return io.NodeOutput(torch.stack(frames), video_info)
 
 
-class PrepVideoForExtend:
+class PrepVideoForExtend(io.ComfyNode):
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "frames": ("IMAGE",),
-                "cut_point": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1000.0, "step": 0.1}),
-                "cut_point_type": (["seconds", "frames"], {"default": "seconds"}),
-            }
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the prep video node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="PrepVideoForExtendKlinter",
+            display_name="Prep Video For Extend - Klinter",
+            category="Klinter",
+            description="Process video frames for extension by cutting at a specific point",
+            inputs=[
+                io.Image.Input("frames"),
+                io.Float.Input("cut_point", default=0.0, min=0.0, max=1000.0, step=0.1),
+                io.Combo.Input("cut_point_type", options=["seconds", "frames"], default="seconds"),
+            ],
+            outputs=[
+                io.Image.Output(display_name="processed_frames")
+            ]
+        )
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("processed_frames",)
-    FUNCTION = "process_video"
-    CATEGORY = "Klinter"
-
-    def process_video(self, frames: torch.Tensor, cut_point: float, cut_point_type: str):
+    @classmethod
+    def execute(cls, frames: torch.Tensor, cut_point: float, cut_point_type: str) -> io.NodeOutput:
         """Process video frames for extension.
         
         Args:
@@ -208,4 +227,4 @@ class PrepVideoForExtend:
             raise ValueError("Video must be at least 5 seconds long")
 
         selected_frames = frames[start_frame:start_frame + frames_needed]
-        return (selected_frames,)
+        return io.NodeOutput(selected_frames)

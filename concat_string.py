@@ -1,28 +1,34 @@
 """Node for concatenating strings in ComfyUI."""
 
-class ConcatString:
+from comfy_api.latest import io
+
+class ConcatString(io.ComfyNode):
     """Node for efficiently concatenating strings with optional additional string."""
 
     @classmethod
-    def INPUT_TYPES(cls) -> dict:
-        """Define the input types for the concatenation operation.
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the concatenation node.
         
         Returns:
-            dict: Input type specifications for the node
+            io.Schema: Node schema with inputs and outputs
         """
-        return {
-            "required": {
-                "string_a": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
-                "string_b": ("STRING", {"forceInput": True, "default": "", "multiline": True}),
-                "string_c": ("STRING", {"default": "", "multiline": True}),
-            }
-        }
+        return io.Schema(
+            node_id="concat",
+            display_name="Concat String - klinter",
+            category="klinter",
+            description="Efficiently concatenates up to three strings",
+            inputs=[
+                io.String.Input("string_a", default="", multiline=True, force_input=True),
+                io.String.Input("string_b", default="", multiline=True, force_input=True),
+                io.String.Input("string_c", default="", multiline=True),
+            ],
+            outputs=[
+                io.String.Output()
+            ]
+        )
 
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "concat"
-    CATEGORY = "klinter"
-
-    def concat(self, string_a: str, string_b: str, string_c: str = "") -> tuple[str]:
+    @classmethod
+    def execute(cls, string_a: str, string_b: str, string_c: str = "") -> io.NodeOutput:
         """Efficiently concatenates up to three strings.
         
         Args:
@@ -31,11 +37,12 @@ class ConcatString:
             string_c: Optional third string to concatenate
             
         Returns:
-            tuple[str]: Single-element tuple containing the concatenated string
+            io.NodeOutput: Concatenated string
         """
         # Filter out empty strings and join with spaces
         strings = [s for s in (string_a, string_b, string_c) if s]
-        return (" ".join(strings),)
+        result = " ".join(strings)
+        return io.NodeOutput(result)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {

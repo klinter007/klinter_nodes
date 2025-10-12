@@ -11,9 +11,10 @@ Author: Klinter Nodes
 import torch
 import numpy as np
 from typing import Optional, Tuple, List, Union
+from comfy_api.latest import io
 
 
-class FlexibleBatchImage:
+class FlexibleBatchImage(io.ComfyNode):
     """
     A flexible batch image node that accepts up to 6 optional image inputs
     and outputs them sequentially without aspect ratio constraints.
@@ -24,50 +25,46 @@ class FlexibleBatchImage:
     """
     
     @classmethod
-    def INPUT_TYPES(cls):
-        """
-        Define the input types for the flexible batch image node.
-        All 6 image inputs are optional to support flexible batching from 1-6 images.
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the flexible batch image node.
         
         Returns:
-            dict: Input specifications with 6 optional image slots
+            io.Schema: Node schema with inputs and outputs
         """
-        return {
-            "required": {
-                # No required inputs - all images are optional
-            },
-            "optional": {
-                "image_1": ("IMAGE",),
-                "image_2": ("IMAGE",),
-                "image_3": ("IMAGE",),
-                "image_4": ("IMAGE",),
-                "image_5": ("IMAGE",),
-                "image_6": ("IMAGE",),
-            }
-        }
-    
-    # Return type is IMAGE to output the processed images
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
-    FUNCTION = "process_batch"
-    CATEGORY = "klinter"
-    NODE_COLOR = "#4CAF50"  # Green for batch processing
+        return io.Schema(
+            node_id="FlexibleBatchImage",
+            display_name="Flexible Batch Image - klinter",
+            category="klinter",
+            description="Accept up to 6 optional image inputs and output them sequentially without aspect ratio constraints",
+            inputs=[
+                io.Image.Input("image_1", optional=True),
+                io.Image.Input("image_2", optional=True),
+                io.Image.Input("image_3", optional=True),
+                io.Image.Input("image_4", optional=True),
+                io.Image.Input("image_5", optional=True),
+                io.Image.Input("image_6", optional=True),
+            ],
+            outputs=[
+                io.Image.Output(display_name="images")
+            ]
+        )
     
     @classmethod
-    def VALIDATE_INPUTS(cls, **kwargs):
+    def validate_inputs(cls, **kwargs):
         """
         Validate inputs - all inputs are valid since we handle dynamic scenarios.
         Even if no images are provided, we handle it gracefully.
         """
         return True
     
-    def process_batch(self, 
+    @classmethod
+    def execute(cls, 
                      image_1: Optional[torch.Tensor] = None,
                      image_2: Optional[torch.Tensor] = None,
                      image_3: Optional[torch.Tensor] = None,
                      image_4: Optional[torch.Tensor] = None,
                      image_5: Optional[torch.Tensor] = None,
-                     image_6: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor]:
+                     image_6: Optional[torch.Tensor] = None) -> io.NodeOutput:
         """
         Process the batch of images sequentially to preserve aspect ratios.
         
@@ -79,7 +76,7 @@ class FlexibleBatchImage:
             image_1 to image_6: Optional image tensors in ComfyUI format
             
         Returns:
-            Tuple[torch.Tensor]: Processed images maintaining original aspect ratios
+            io.NodeOutput: Processed images maintaining original aspect ratios
         """
         # Collect all non-None images
         input_images = []
@@ -98,12 +95,12 @@ class FlexibleBatchImage:
             print("FlexibleBatchImage: No valid images provided, creating empty placeholder")
             # Return a small placeholder image to avoid breaking the workflow
             empty_image = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
-            return (empty_image,)
+            return io.NodeOutput(empty_image)
         
         # Handle single image case
         if len(input_images) == 1:
             print(f"FlexibleBatchImage: Single image processing - shape {input_images[0].shape}")
-            return (input_images[0],)
+            return io.NodeOutput(input_images[0])
         
         # Process multiple images sequentially - avoid torch.cat() to preserve aspect ratios!
         print(f"FlexibleBatchImage: Processing {len(input_images)} images sequentially")
@@ -136,7 +133,7 @@ class FlexibleBatchImage:
         print(f"FlexibleBatchImage: Returning first image with shape {result.shape}")
         print("FlexibleBatchImage: Note - currently returning only first image to avoid tensor mismatch")
         
-        return (result,)
+        return io.NodeOutput(result)
 
 
 # Node registration for standalone usage

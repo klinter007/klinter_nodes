@@ -4,23 +4,44 @@ A node that concatenates multiple strings with customizable separators.
 Inspired by the multi-input design pattern from Kijai's ComfyUI-KJNodes (https://github.com/kijai/ComfyUI-KJNodes)
 """
 
-class StringContactMulti:
+from comfy_api.latest import io
+
+class StringContactMulti(io.ComfyNode):
     """A node that allows concatenating multiple strings with a choice of separators."""
     
     @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "inputcount": ("INT", {"default": 2, "min": 2, "max": 1000, "step": 1}),
-                "separator": (["comma", "newline", "pipe", "space"], {"default": "comma"}),
-            },
-        }
+    def define_schema(cls) -> io.Schema:
+        """Define the schema for the multi-string concatenation node.
+        
+        Returns:
+            io.Schema: Node schema with inputs and outputs
+        """
+        return io.Schema(
+            node_id="string_contact_multi",
+            display_name="String Contact Multi - klinter",
+            category="string",
+            description="Concatenate multiple strings with customizable separators",
+            inputs=[
+                io.Int.Input("inputcount", default=2, min=2, max=1000, step=1),
+                io.Combo.Input("separator", options=["comma", "newline", "pipe", "space"], default="comma"),
+            ],
+            outputs=[
+                io.String.Output()
+            ]
+        )
     
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "concatenate_strings"
-    CATEGORY = "string"
-    
-    def concatenate_strings(self, inputcount, separator, **kwargs):
+    @classmethod
+    def execute(cls, inputcount, separator, **kwargs) -> io.NodeOutput:
+        """Concatenate multiple strings with a customizable separator.
+        
+        Args:
+            inputcount: Number of inputs to concatenate
+            separator: Type of separator to use (comma, newline, pipe, or space)
+            **kwargs: Dynamic string inputs (string_1, string_2, etc.)
+        
+        Returns:
+            io.NodeOutput: Concatenated string
+        """
         # Define separator mapping
         separator_map = {
             "comma": ",",
@@ -42,7 +63,7 @@ class StringContactMulti:
         # Join strings with the selected separator
         result = sep.join(strings)
         
-        return (result,)
+        return io.NodeOutput(result)
 
 # Register the node - using lowercase to match __init__.py
 NODE_CLASS_MAPPINGS = {
