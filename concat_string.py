@@ -1,34 +1,23 @@
 """Node for concatenating strings in ComfyUI."""
 
-from comfy_api.latest import io
-
-class ConcatString(io.ComfyNode):
+class ConcatString:
     """Node for efficiently concatenating strings with optional additional string."""
 
     @classmethod
-    def define_schema(cls) -> io.Schema:
-        """Define the schema for the concatenation node.
-        
-        Returns:
-            io.Schema: Node schema with inputs and outputs
-        """
-        return io.Schema(
-            node_id="concat",
-            display_name="Concat String - klinter",
-            category="klinter",
-            description="Efficiently concatenates up to three strings",
-            inputs=[
-                io.String.Input("string_a", default="", multiline=True),
-                io.String.Input("string_b", default="", multiline=True),
-                io.String.Input("string_c", default="", multiline=True),
-            ],
-            outputs=[
-                io.String.Output()
-            ]
-        )
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "string_a": ("STRING", {"multiline": True, "default": ""}),
+                "string_b": ("STRING", {"multiline": True, "default": ""}),
+                "string_c": ("STRING", {"multiline": True, "default": ""}),
+            }
+        }
 
-    @classmethod
-    def execute(cls, string_a: str, string_b: str, string_c: str = "") -> io.NodeOutput:
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "concatenate"
+    CATEGORY = "klinter"
+
+    def concatenate(self, string_a: str, string_b: str, string_c: str = ""):
         """Efficiently concatenates up to three strings.
         
         Args:
@@ -37,12 +26,12 @@ class ConcatString(io.ComfyNode):
             string_c: Optional third string to concatenate
             
         Returns:
-            io.NodeOutput: Concatenated string
+            tuple: Concatenated string
         """
         # Filter out empty strings and join with spaces
         strings = [s for s in (string_a, string_b, string_c) if s]
         result = " ".join(strings)
-        return io.NodeOutput(result)
+        return (result,)
 
 # Register the node
 NODE_CLASS_MAPPINGS = {
